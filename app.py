@@ -7,17 +7,13 @@ import streamlit as st
 try:
   api_key = st.secrets["GEMINI_API_KEY"]
 except Exception:
-  # Trage hier NUR zum lokalen Testen deinen Key ein - vor dem Hochladen auf GitHub wieder leer lassen!
   api_key = ""
 
 if not api_key:
   st.error(
-      "⚠️ Bitte trage einen API-Key in den Streamlit Secrets oder im Code ein,"
-      " um lokal zu testen."
+      "⚠️ Bitte trage deinen API-Key in den Streamlit Secrets (unter Settings >"
+      " Secrets) oder im Code ein."
   )
-
-# Initialize the Gemini client with the safe key
-client = genai.Client(api_key=api_key)
 
 # Page configuration
 st.set_page_config(
@@ -26,8 +22,8 @@ st.set_page_config(
 
 st.title("✨ Gemini AI Chat & Image Assistant")
 st.markdown(
-    "Chat with AI in any language or ask it to generate images directly in the"
-    " chat!"
+    "Chatte mit der KI in jeder Sprache oder lass dir direkt Bilder im Chat"
+    " generieren!"
 )
 
 # Initialize chat history
@@ -42,13 +38,6 @@ system_instruction = (
     " the image]. Keep your conversational text brief when an image is"
     " requested."
 )
-
-# Initialize chat session with the stable model
-if "chat" not in st.session_state:
-  st.session_state.chat = client.chats.create(
-      model="gemini-3.8-flash",
-      config=dict(system_instruction=system_instruction),
-  )
 
 
 def extract_and_display_response(text):
@@ -78,7 +67,8 @@ for message in st.session_state.messages:
 
 # User input field
 if user_input := st.chat_input(
-    "Type your message here (e.g., 'Hello' or 'Draw a futuristic city')..."
+    "Schreibe deine Nachricht hier (z.B. 'Hallo' oder 'Zeichne eine futuristische"
+    " Stadt')..."
 ):
   st.session_state.messages.append({"role": "user", "content": user_input})
   with st.chat_message("user"):
@@ -90,7 +80,14 @@ if user_input := st.chat_input(
     message_placeholder.markdown("*AI is thinking...*")
 
     try:
-      response = st.session_state.chat.send_message(user_input)
+      # Frischen Client und Chat pro Anfrage erstellen, um geschlossene Verbindungen zu verhindern
+      client = genai.Client(api_key=api_key)
+      chat = client.chats.create(
+          model="gemini-2.5-flash",
+          config=dict(system_instruction=system_instruction),
+      )
+
+      response = chat.send_message(user_input)
       message_placeholder.empty()
 
       extract_and_display_response(response.text)
