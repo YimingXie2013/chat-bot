@@ -12,7 +12,7 @@ except Exception:
 if not api_key:
   st.error(
       "⚠️ Bitte trage deinen API-Key in den Streamlit Secrets (unter Settings >"
-      " Secrets) oder im Code ein."
+      " Secrets) ein."
   )
 
 # Page configuration
@@ -80,10 +80,10 @@ if user_input := st.chat_input(
     message_placeholder.markdown("*AI is thinking...*")
 
     try:
-      # Frischen Client und Chat pro Anfrage erstellen, um geschlossene Verbindungen zu verhindern
+      # Frischen Client und Chat pro Anfrage mit dem neuen Modell gemini-3.8-flash erstellen
       client = genai.Client(api_key=api_key)
       chat = client.chats.create(
-          model="gemini-2.5-flash",
+          model="gemini-3.8-flash",
           config=dict(system_instruction=system_instruction),
       )
 
