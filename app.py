@@ -79,7 +79,7 @@ if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
         groq_messages.append({"role": msg["role"], "content": msg["content"]})
 
       completion = client.chat.completions.create(
-          model="llama-3.1-8b-instant",
+          model="openai/gpt-oss-20b",
           messages=groq_messages,
           temperature=0.7,
       )
