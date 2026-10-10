@@ -1,28 +1,28 @@
 import re
 import urllib.parse
-from google import genai
+from groq import Groq
 import streamlit as st
 
-# Safe API key loading: Tries Streamlit Secrets first, local fallback is empty
+# Safe API key loading from Streamlit Secrets
 try:
-  api_key = st.secrets["GEMINI_API_KEY"]
+  api_key = st.secrets["GROQ_API_KEY"]
 except Exception:
   api_key = ""
 
 if not api_key:
   st.error(
-      "⚠️ Bitte trage deinen API-Key in den Streamlit Secrets (unter Settings >"
-      " Secrets) ein."
+      "⚠️ Bitte trage deinen GROQ_API_KEY in den Streamlit Secrets (unter"
+      " Settings > Secrets) ein."
   )
 
 # Page configuration
 st.set_page_config(
-    page_title="Gemini AI Assistant", page_icon="✨", layout="centered"
+    page_title="Llama AI Assistant", page_icon="✨", layout="centered"
 )
 
-st.title("✨ Gemini AI Chat & Image Assistant")
+st.title("✨ Llama AI Chat & Image Assistant (Groq)")
 st.markdown(
-    "Chatte mit der KI in jeder Sprache oder lass dir direkt Bilder im Chat"
+    "Chatte ultraschnell mit der KI oder lass dir direkt Bilder im Chat"
     " generieren!"
 )
 
@@ -30,13 +30,13 @@ st.markdown(
 if "messages" not in st.session_state:
   st.session_state.messages = []
 
-# System instructions
-system_instruction = (
-    "You are a helpful, multilingual AI assistant. When the user asks to draw,"
-    " create, or generate an image, you must include a special tag in your"
-    " response formatted strictly as: [IMAGE: detailed english description of"
-    " the image]. Keep your conversational text brief when an image is"
-    " requested."
+# System instruction
+system_prompt = (
+    "You are a helpful, multilingual AI assistant powered by Groq. When the user"
+    " asks to draw, create, or generate an image, you must include a special tag"
+    " in your response formatted strictly as: [IMAGE: detailed english"
+    " description of the image]. Keep your conversational text brief when an"
+    " image is requested."
 )
 
 
@@ -66,10 +66,7 @@ for message in st.session_state.messages:
     extract_and_display_response(message["content"])
 
 # User input field
-if user_input := st.chat_input(
-    "Schreibe deine Nachricht hier (z.B. 'Hallo' oder 'Zeichne eine futuristische"
-    " Stadt')..."
-):
+if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
   st.session_state.messages.append({"role": "user", "content": user_input})
   with st.chat_message("user"):
     st.markdown(user_input)
@@ -80,23 +77,27 @@ if user_input := st.chat_input(
     message_placeholder.markdown("*AI is thinking...*")
 
     try:
-      # Frischen Client und Chat pro Anfrage mit dem neuen Modell gemini-3.8-flash erstellen
-      client = genai.Client(api_key=api_key)
-      chat = client.chats.create(
-          model="gemini-3.8-flash",
-          config=dict(system_instruction=system_instruction),
+      client = Groq(api_key=api_key)
+
+      # Build message list for Groq API including system prompt
+      groq_messages = [{"role": "system", "content": system_prompt}]
+      for msg in st.session_state.messages:
+        groq_messages.append({"role": msg["role"], "content": msg["content"]})
+
+      # Request completion using Llama 3.3 70B
+      completion = client.chat.completions.create(
+          model="llama-3.3-70b-versatile",
+          messages=groq_messages,
+          temperature=0.7,
       )
 
-      response = chat.send_message(user_input)
+      response_text = completion.choices[0].message.content
       message_placeholder.empty()
 
-      extract_and_display_response(response.text)
+      extract_and_display_response(response_text)
 
       st.session_state.messages.append(
-          {"role": "assistant", "content": response.text}
+          {"role": "assistant", "content": response_text}
       )
     except Exception as e:
-      message_placeholder.markdown(
-          "⚠️ **Error:** Rate limit reached or connection issue. Please wait a"
-          f" moment. (Details: {e})"
-      )
+      message_placeholder.markdown(f"⚠️ **Error:** {e}")
