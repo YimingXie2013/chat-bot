@@ -31,7 +31,7 @@ with st.sidebar:
   image_prompt_input = st.text_input("Was möchtest du generieren?")
   if st.button("Bild direkt erstellen") and image_prompt_input:
     encoded = urllib.parse.quote(image_prompt_input)
-    img_url = f"https://pollinations.ai/p/{encoded}?width=1024&height=1024"
+    img_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024"
     st.session_state.messages.append({
         "role": "assistant",
         "content": f"Hier ist dein generiertes Bild für: *{image_prompt_input}*",
