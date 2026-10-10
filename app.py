@@ -40,36 +40,30 @@ system_prompt = (
 )
 
 
-def extract_and_display_response(text):
-  """Parses [IMAGE: ...] tags from the response and renders images inline."""
-  image_match = re.search(r"\[IMAGE:\s*(.*?)\]", text, re.IGNORECASE)
+def render_message(msg):
+  """Renders user and assistant messages, including image generation."""
+  with st.chat_message(msg["role"]):
+    text = msg["content"]
+    image_url = msg.get("image_url")
+    image_prompt = msg.get("image_prompt")
 
-  if image_match:
-    prompt = image_match.group(1).strip()
-    clean_text = re.sub(r"\[IMAGE:\s*.*?\]", "", text, flags=re.IGNORECASE).strip()
+    if text:
+      st.markdown(text)
 
-    if clean_text:
-      st.markdown(clean_text)
-
-    encoded_prompt = urllib.parse.quote(prompt)
-    image_url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed=42"
-
-    with st.spinner("🎨 Generating image..."):
-      st.image(image_url, caption=f"Prompt: {prompt}")
-  else:
-    st.markdown(text)
+    if image_url:
+      st.image(image_url, caption=f"Prompt: {image_prompt}")
 
 
-# Display chat history
+# Display all previous messages from session history
 for message in st.session_state.messages:
-  with st.chat_message(message["role"]):
-    extract_and_display_response(message["content"])
+  render_message(message)
 
 # User input field
 if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
-  st.session_state.messages.append({"role": "user", "content": user_input})
-  with st.chat_message("user"):
-    st.markdown(user_input)
+  # Append user message
+  user_msg = {"role": "user", "content": user_input}
+  st.session_state.messages.append(user_msg)
+  render_message(user_msg)
 
   # Generate assistant response
   with st.chat_message("assistant"):
@@ -84,9 +78,8 @@ if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
       for msg in st.session_state.messages:
         groq_messages.append({"role": msg["role"], "content": msg["content"]})
 
-      # Request completion using Llama 3.3 70B
       completion = client.chat.completions.create(
-          model="openai/gpt-oss-20b",
+          model="llama-3.1-8b-instant",
           messages=groq_messages,
           temperature=0.7,
       )
@@ -94,10 +87,29 @@ if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
       response_text = completion.choices[0].message.content
       message_placeholder.empty()
 
-      extract_and_display_response(response_text)
+      # Check for [IMAGE: ...] prompt in AI response
+      image_match = re.search(r"\[IMAGE:\s*(.*?)\]", response_text, re.IGNORECASE)
 
-      st.session_state.messages.append(
-          {"role": "assistant", "content": response_text}
-      )
+      if image_match:
+        prompt = image_match.group(1).strip()
+        clean_text = re.sub(
+            r"\[IMAGE:\s*.*?\]", "", response_text, flags=re.IGNORECASE
+        ).strip()
+        encoded_prompt = urllib.parse.quote(prompt)
+        image_url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed=42"
+
+        assistant_msg = {
+            "role": "assistant",
+            "content": clean_text,
+            "image_url": image_url,
+            "image_prompt": prompt,
+        }
+      else:
+        assistant_msg = {"role": "assistant", "content": response_text}
+
+      # Save message to session state & display
+      st.session_state.messages.append(assistant_msg)
+      render_message(assistant_msg)
+
     except Exception as e:
       message_placeholder.markdown(f"⚠️ **Error:** {e}")
