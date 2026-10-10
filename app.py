@@ -1,4 +1,3 @@
-import re
 import urllib.parse
 from groq import Groq
 import streamlit as st
@@ -21,51 +20,40 @@ st.set_page_config(
 )
 
 st.title("✨ Llama AI Chat & Image Assistant (Groq)")
-st.markdown(
-    "Chatte ultraschnell mit der KI oder lass dir direkt Bilder im Chat"
-    " generieren!"
-)
 
-# Initialize chat history
+# Initialize chat history in session state
 if "messages" not in st.session_state:
   st.session_state.messages = []
 
-# System instruction
-system_prompt = (
-    "You are a helpful, multilingual AI assistant powered by Groq. When the user"
-    " asks to draw, create, or generate an image, you must include a special tag"
-    " in your response formatted strictly as: [IMAGE: detailed english"
-    " description of the image]. Keep your conversational text brief when an"
-    " image is requested."
-)
+# Sidebar for direct image generation option
+with st.sidebar:
+  st.header("🎨 Bildgenerator")
+  image_prompt_input = st.text_input("Was möchtest du generieren?")
+  if st.button("Bild direkt erstellen") and image_prompt_input:
+    encoded = urllib.parse.quote(image_prompt_input)
+    img_url = f"https://pollinations.ai/p/{encoded}?width=1024&height=1024"
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": f"Hier ist dein generiertes Bild für: *{image_prompt_input}*",
+        "image_url": img_url,
+    })
+    st.rerun()
 
-
-def render_message(msg):
-  """Renders user and assistant messages, including image generation."""
-  with st.chat_message(msg["role"]):
-    text = msg["content"]
-    image_url = msg.get("image_url")
-    image_prompt = msg.get("image_prompt")
-
-    if text:
-      st.markdown(text)
-
-    if image_url:
-      st.image(image_url, caption=f"Prompt: {image_prompt}")
-
-
-# Display all previous messages from session history
+# Display chat history safely
 for message in st.session_state.messages:
-  render_message(message)
+  with st.chat_message(message["role"]):
+    st.markdown(message["content"])
+    if "image_url" in message and message["image_url"]:
+      st.image(message["image_url"])
 
-# User input field
+# Main Chat Input
 if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
-  # Append user message
-  user_msg = {"role": "user", "content": user_input}
-  st.session_state.messages.append(user_msg)
-  render_message(user_msg)
+  # User message
+  st.session_state.messages.append({"role": "user", "content": user_input})
+  with st.chat_message("user"):
+    st.markdown(user_input)
 
-  # Generate assistant response
+  # Assistant response via Groq
   with st.chat_message("assistant"):
     message_placeholder = st.empty()
     message_placeholder.markdown("*AI is thinking...*")
@@ -73,43 +61,23 @@ if user_input := st.chat_input("Schreibe deine Nachricht hier..."):
     try:
       client = Groq(api_key=api_key)
 
-      # Build message list for Groq API including system prompt
-      groq_messages = [{"role": "system", "content": system_prompt}]
+      groq_messages = []
       for msg in st.session_state.messages:
-        groq_messages.append({"role": msg["role"], "content": msg["content"]})
+        # Nur Textnachrichten an Groq übergeben
+        if "role" in msg and "content" in msg:
+          groq_messages.append({"role": msg["role"], "content": msg["content"]})
 
       completion = client.chat.completions.create(
-          model="openai/gpt-oss-20b",
-          messages=groq_messages,
-          temperature=0.7,
+          model="openai/gpt-oss-20b", messages=groq_messages, temperature=0.7
       )
 
       response_text = completion.choices[0].message.content
-      message_placeholder.empty()
+      message_placeholder.markdown(response_text)
 
-      # Check for [IMAGE: ...] prompt in AI response
-      image_match = re.search(r"\[IMAGE:\s*(.*?)\]", response_text, re.IGNORECASE)
-
-      if image_match:
-        prompt = image_match.group(1).strip()
-        clean_text = re.sub(
-            r"\[IMAGE:\s*.*?\]", "", response_text, flags=re.IGNORECASE
-        ).strip()
-        encoded_prompt = urllib.parse.quote(prompt)
-        image_url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed=42"
-
-        assistant_msg = {
-            "role": "assistant",
-            "content": clean_text,
-            "image_url": image_url,
-            "image_prompt": prompt,
-        }
-      else:
-        assistant_msg = {"role": "assistant", "content": response_text}
-
-      # Save message to session state & display
-      st.session_state.messages.append(assistant_msg)
-      render_message(assistant_msg)
+      # Save to history
+      st.session_state.messages.append(
+          {"role": "assistant", "content": response_text}
+      )
 
     except Exception as e:
       message_placeholder.markdown(f"⚠️ **Error:** {e}")
