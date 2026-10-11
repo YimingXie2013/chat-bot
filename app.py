@@ -166,7 +166,7 @@ if app_mode == "Arcade Games":
         "https://chvin.github.io/react-tetris/", height=600, scrolling=False
     )
 
-  # VIP HIGH QUALITY GAME: 3D Cyber Racer
+  # VIP HIGH QUALITY GAME: 3D Cyber Racer mit Touch Controls für Smartphones
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -177,9 +177,38 @@ if app_mode == "Arcade Games":
       )
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
-      st.components.v1.iframe(
-          "https://hexgl.bkcore.com/play/", height=620, scrolling=False
+      st.markdown(
+          "📱 *PC: Nutzen Sie WASD oder Pfeiltasten | Handy: Nutzen Sie die"
+          " Touch-Buttons unten!*"
       )
+
+      # High-End HTML-Container inklusive eingebettetem Spiel und optimierten Touch-Steuerungs-Buttons für Smartphones
+      cyber_racer_html = """
+            <div style="text-align: center; background: #0b0f19; padding: 10px; border-radius: 12px; border: 2px solid #00ffcc;">
+                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="450px" style="border:none; border-radius: 8px;" allowfullscreen="true"></iframe>
+                
+                <p style="color: #00ffcc; font-family: sans-serif; font-size: 14px; margin: 10px 0 5px 0; font-weight: bold;">📱 Mobile Touch Steuerung</p>
+                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="sendKey(37)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;">⬅️ Links</button>
+                    <button onclick="sendKey(38)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Gas</button>
+                    <button onclick="sendKey(39)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;"> Rechts ➡️</button>
+                    <button onclick="sendKey(40)" style="background: #1f2937; color: white; border: 2px solid #ff4444; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;"> 🛑 Bremse</button>
+                </div>
+            </div>
+            <script>
+                function sendKey(keyCode) {
+                    // Simuliert Tastendrücke für das Iframe-Spiel
+                    var iframe = document.querySelector('iframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyCode, 'which': keyCode}));
+                        setTimeout(function() {
+                            iframe.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': keyCode, 'which': keyCode}));
+                        }, 100);
+                    }
+                }
+            </script>
+            """
+      st.components.v1.html(cyber_racer_html, height=580)
 
 elif app_mode == "Chat & AI":
   # Render Chat History
