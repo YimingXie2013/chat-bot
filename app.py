@@ -102,7 +102,10 @@ if app_mode == "Arcade Games":
           "🐍 Snake (Free)",
           "🎲 2048 (Free)",
           "🧩 Tetris (Free)",
-          "🏎️ 3D Cyber Racer (👑 VIP High-Quality)",
+          "🔻 Geometry Dash (Free Classic)",
+          "🏎️ 3D Cyber Racer (👑 VIP)",
+          "🧟 3D Zombie Survival (👑 VIP)",
+          "🚀 3D Space Shooter (👑 VIP)",
       ],
   )
 
@@ -114,7 +117,6 @@ if app_mode == "Arcade Games":
             <canvas id="gc" width="320" height="320" style="background-color: #111; border: 2px solid #4CAF50; border-radius: 8px;"></canvas>
             <p style="color: #888; font-family: sans-serif; font-size: 13px; margin: 8px 0;">PC: Arrow Keys | Mobile: Tap controls below</p>
             
-            <!-- Mobile Touch Controls -->
             <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px;">
                 <button onclick="changeDir(38)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 25px; font-size: 18px; border-radius: 8px; cursor: pointer;">⬆️ UP</button>
                 <div style="display: flex; gap: 10px;">
@@ -170,28 +172,34 @@ if app_mode == "Arcade Games":
         "https://2048game.com/", height=600, scrolling=True
     )
 
-  # FREE GAME 3: English Mobile Tetris
+  # FREE GAME 3: English Mobile Tetris (FIXED STABLE URL)
   elif "Tetris" in game_choice:
     st.subheader("🧩 Tetris (Free Classic)")
     st.components.v1.iframe(
-        "https://austin-nguyen.github.io/tetris/", height=620, scrolling=False
+        "https://jakesgordon.github.io/javascript-tetris/",
+        height=620,
+        scrolling=False,
     )
 
-  # VIP HIGH QUALITY GAME: 3D Cyber Racer with Touch Pad & Fullscreen Options
+  # FREE GAME 4: Geometry Dash
+  elif "Geometry Dash" in game_choice:
+    st.subheader("🔻 Geometry Dash (Free Classic)")
+    st.info("🕹️ **Controls:** Tap the screen or press Spacebar / Up Arrow to jump!")
+    st.components.v1.iframe(
+        "https://freegeometrydash.com/geometry-dash-lite.embed",
+        height=620,
+        scrolling=False,
+    )
+
+  # VIP GAME 1: 3D Cyber Racer
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
-          "🔒 **3D Cyber Racer is an exclusive VIP High-Quality game!**\n\n"
-          "This premium 3D game is reserved for PRO members.\n"
-          "Enter your VIP Key (`PRO2026`) in the sidebar to unlock it!"
+          "🔒 **3D Cyber Racer is reserved for VIP PRO members!**\n\nEnter VIP Key"
+          " (`PRO2026`) in the sidebar to unlock."
       )
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
-      st.info(
-          "🕹️ **Controls:** Use WASD / Arrow keys on PC, or use the touch"
-          " buttons below on Mobile!"
-      )
-
       st.markdown(
           '<a href="https://hexgl.bkcore.com/play/" target="_blank"'
           ' style="display: inline-block; background-color: #00ffcc; color:'
@@ -200,32 +208,41 @@ if app_mode == "Arcade Games":
           ' in New Fullscreen Tab</a>',
           unsafe_allow_html=True,
       )
+      st.components.v1.iframe(
+          "https://hexgl.bkcore.com/play/", height=550, scrolling=False
+      )
 
-      cyber_racer_html = """
-            <div style="text-align: center; background: #0b0f19; padding: 10px; border-radius: 12px; border: 2px solid #00ffcc;">
-                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="450px" style="border:none; border-radius: 8px;" allowfullscreen="true"></iframe>
-                
-                <p style="color: #00ffcc; font-family: sans-serif; font-size: 13px; margin: 10px 0 5px 0; font-weight: bold;">📱 Mobile Touch Controls</p>
-                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-                    <button onclick="sendKey(37)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">⬅️ Left</button>
-                    <button onclick="sendKey(38)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Gas</button>
-                    <button onclick="sendKey(39)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">Right ➡️</button>
-                    <button onclick="sendKey(40)" style="background: #1f2937; color: white; border: 2px solid #ff4444; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">🛑 Brake</button>
-                </div>
-            </div>
-            <script>
-                function sendKey(keyCode) {
-                    var iframe = document.querySelector('iframe');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyCode, 'which': keyCode}));
-                        setTimeout(function() {
-                            iframe.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': keyCode, 'which': keyCode}));
-                        }, 100);
-                    }
-                }
-            </script>
-            """
-      st.components.v1.html(cyber_racer_html, height=580)
+  # VIP GAME 2: 3D Zombie Survival
+  elif "3D Zombie Survival" in game_choice:
+    if not st.session_state.is_premium:
+      st.warning(
+          "🔒 **3D Zombie Survival is reserved for VIP PRO members!**\n\nEnter"
+          " VIP Key (`PRO2026`) in the sidebar to unlock."
+      )
+    else:
+      st.subheader("🧟 3D Zombie Survival (👑 VIP Unlocked)")
+      st.info("🕹️ **Controls:** WASD / Touch controls to move and eliminate waves.")
+      st.components.v1.iframe(
+          "https://play.gamepix.com/zombie-derby-pixel-survival/embed",
+          height=600,
+          scrolling=False,
+      )
+
+  # VIP GAME 3: 3D Space Shooter
+  elif "3D Space Shooter" in game_choice:
+    if not st.session_state.is_premium:
+      st.warning(
+          "🔒 **3D Space Shooter is reserved for VIP PRO members!**\n\nEnter VIP"
+          " Key (`PRO2026`) in the sidebar to unlock."
+      )
+    else:
+      st.subheader("🚀 3D Space Shooter (👑 VIP Unlocked)")
+      st.info("🕹️ **Controls:** Drag or tap to navigate your ship and shoot enemy fleets.")
+      st.components.v1.iframe(
+          "https://play.gamepix.com/space-blaze-2/embed",
+          height=600,
+          scrolling=False,
+      )
 
 elif app_mode == "Chat & AI":
   # Render Chat History
