@@ -78,8 +78,12 @@ with st.sidebar:
       with st.spinner("🎬 Generating cinematic AI video..."):
         prompt_lower = video_prompt_input.lower()
 
-        # Reliable high-quality animation GIFs mapped to keywords
-        if (
+        # Fixed reliable animation GIFs mapped correctly to keywords
+        if "bird" in prompt_lower or "fly" in prompt_lower:
+          video_url = (
+              "https://media2.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif"
+          )
+        elif (
             "space" in prompt_lower
             or "galaxy" in prompt_lower
             or "star" in prompt_lower
@@ -88,8 +92,7 @@ with st.sidebar:
         elif (
             "nature" in prompt_lower
             or "forest" in prompt_lower
-            or "bird" in prompt_lower
-            or "fly" in prompt_lower
+            or "tree" in prompt_lower
         ):
           video_url = "https://media3.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif"
         elif (
@@ -203,7 +206,6 @@ else:
       if "image_url" in message and message["image_url"]:
         st.image(message["image_url"])
       if "video_url" in message and message["video_url"]:
-        # Render GIF smoothly using st.image
         st.image(message["video_url"], width=500)
 
   # Main Chat Input
