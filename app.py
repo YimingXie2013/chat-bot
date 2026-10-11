@@ -177,28 +177,24 @@ if app_mode == "Arcade Games":
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
       st.info(
-          "🕹️ **How to play on PC:** Click inside the game window below to"
-          " enable WASD / Arrow controls, OR click **'Open Fullscreen Game'**"
-          " to play without any page scrolling!"
+          "🕹️ **How to play:** Click inside the game window below to use WASD"
+          " / Arrow keys, OR click the button below to open it in a clean full"
+          " screen tab!"
       )
 
+      # Safe target=_blank link to avoid locking the Streamlit frame app
       st.markdown(
-          "[🚀 Open Fullscreen Game Mode](https://hexgl.bkcore.com/play/)"
+          '<a href="https://hexgl.bkcore.com/play/" target="_blank"'
+          ' style="display: inline-block; background-color: #00ffcc; color:'
+          ' #0b0f19; padding: 10px 20px; font-weight: bold; border-radius:'
+          ' 6px; text-decoration: none; margin-bottom: 10px;">🚀 Launch Game'
+          ' in New Fullscreen Tab</a>',
+          unsafe_allow_html=True,
       )
 
-      cyber_racer_html = """
-            <div style="text-align: center; background: #0b0f19; padding: 10px; border-radius: 12px; border: 2px solid #00ffcc;">
-                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="500px" id="gameFrame" style="border:none; border-radius: 8px;" tabindex="0"></iframe>
-            </div>
-            <script>
-                // Focus iframe automatically on load
-                window.onload = function() {
-                    var frame = document.getElementById('gameFrame');
-                    if (frame) { frame.focus(); }
-                };
-            </script>
-            """
-      st.components.v1.html(cyber_racer_html, height=540)
+      st.components.v1.iframe(
+          "https://hexgl.bkcore.com/play/", height=550, scrolling=False
+      )
 
 elif app_mode == "Chat & AI":
   # Render Chat History
