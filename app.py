@@ -101,7 +101,7 @@ if app_mode == "Arcade Games":
       [
           "🐍 Snake (Free)",
           "🎲 2048 (Free)",
-          "🧩 Tetris (Free)",
+          "🧩 Tetris (Free Local)",
           "🔻 Geometry Dash (Free Classic)",
           "🏎️ 3D Cyber Racer (👑 VIP)",
           "🧟 3D Zombie Survival (👑 VIP)",
@@ -109,13 +109,13 @@ if app_mode == "Arcade Games":
       ],
   )
 
-  # FREE GAME 1: Snake (Mobile Touch + PC Controls)
+  # FREE GAME 1: Snake (Embedded HTML5)
   if "Snake" in game_choice:
     st.subheader("🐍 Snake (Free Classic)")
     snake_html = """
         <div style="text-align: center; background: #0b0f19; padding: 15px; border-radius: 12px; border: 2px solid #4CAF50;">
             <canvas id="gc" width="320" height="320" style="background-color: #111; border: 2px solid #4CAF50; border-radius: 8px;"></canvas>
-            <p style="color: #888; font-family: sans-serif; font-size: 13px; margin: 8px 0;">PC: Arrow Keys | Mobile: Tap controls below</p>
+            <p style="color: #888; font-family: sans-serif; font-size: 13px; margin: 8px 0;">PC: Arrow Keys | Mobile: Tap buttons below</p>
             
             <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px;">
                 <button onclick="changeDir(38)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 25px; font-size: 18px; border-radius: 8px; cursor: pointer;">⬆️ UP</button>
@@ -165,29 +165,204 @@ if app_mode == "Arcade Games":
         """
     st.components.v1.html(snake_html, height=560)
 
-  # FREE GAME 2: 2048 (Native Swipe Touch Support)
+  # FREE GAME 2: 2048
   elif "2048" in game_choice:
     st.subheader("🎲 2048 (Free Classic)")
     st.components.v1.iframe(
-        "https://2048game.com/", height=600, scrolling=True
+        "https://play2048.co/", height=600, scrolling=True
     )
 
-  # FREE GAME 3: English Mobile Tetris (FIXED STABLE URL)
+  # FREE GAME 3: Tetris (Local HTML5 Canvas - No 404 Errors)
   elif "Tetris" in game_choice:
-    st.subheader("🧩 Tetris (Free Classic)")
-    st.components.v1.iframe(
-        "https://jakesgordon.github.io/javascript-tetris/",
-        height=620,
-        scrolling=False,
-    )
+    st.subheader("🧩 Tetris (Free Local Classic)")
+    tetris_html = """
+        <div style="text-align: center; background: #0b0f19; padding: 15px; border-radius: 12px; border: 2px solid #3b82f6;">
+            <canvas id="tetris" width="240" height="400" style="background-color: #000; border: 2px solid #3b82f6; border-radius: 8px; display: block; margin: 0 auto;"></canvas>
+            <p style="color: #888; font-family: sans-serif; font-size: 13px; margin: 10px 0;">Controls: Arrow Left/Right to Move, Arrow Up to Rotate, Down to Drop</p>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+                <button onclick="playerMove(-1)" style="background: #1f2937; color: white; border: 1px solid #3b82f6; padding: 10px 15px; border-radius: 6px; cursor: pointer;">⬅️</button>
+                <button onclick="playerRotate()" style="background: #1f2937; color: white; border: 1px solid #3b82f6; padding: 10px 15px; border-radius: 6px; cursor: pointer;">🔄</button>
+                <button onclick="playerDrop()" style="background: #1f2937; color: white; border: 1px solid #3b82f6; padding: 10px 15px; border-radius: 6px; cursor: pointer;">⬇️</button>
+                <button onclick="playerMove(1)" style="background: #1f2937; color: white; border: 1px solid #3b82f6; padding: 10px 15px; border-radius: 6px; cursor: pointer;">➡️</button>
+            </div>
+        </div>
+        <script>
+            const canvas = document.getElementById('tetris');
+            const context = canvas.getContext('2d');
+            context.scale(20, 20);
+
+            function arenaSweep() {
+                let rowCount = 1;
+                outer: for (let y = arena.length - 1; y > 0; --y) {
+                    for (let x = 0; x < arena[y].length; ++x) {
+                        if (arena[y][x] === 0) {
+                            continue outer;
+                        }
+                    }
+                    const row = arena.splice(y, 1)[0].fill(0);
+                    arena.unshift(row);
+                    ++y;
+                }
+            }
+
+            function collide(arena, player) {
+                const [m, o] = [player.matrix, player.pos];
+                for (let y = 0; y < m.length; ++y) {
+                    for (let x = 0; x < m[y].length; ++x) {
+                        if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function createMatrix(w, h) {
+                const matrix = [];
+                while (h--) {
+                    matrix.push(new Array(w).fill(0));
+                }
+                return matrix;
+            }
+
+            function createPiece(type) {
+                if (type === 'T') {
+                    return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
+                } else if (type === 'O') {
+                    return [[2, 2], [2, 2]];
+                } else if (type === 'L') {
+                    return [[0, 0, 3], [3, 3, 3], [0, 0, 0]];
+                } else if (type === 'J') {
+                    return [[4, 0, 0], [4, 4, 4], [0, 0, 0]];
+                } else if (type === 'I') {
+                    return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
+                } else if (type === 'S') {
+                    return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+                } else if (type === 'Z') {
+                    return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+                }
+            }
+
+            function drawMatrix(matrix, offset) {
+                matrix.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            context.fillStyle = colors[value];
+                            context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                        }
+                    });
+                });
+            }
+
+            function draw() {
+                context.fillStyle = '#000';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                drawMatrix(arena, {x: 0, y: 0});
+                drawMatrix(player.matrix, player.pos);
+            }
+
+            function merge(arena, player) {
+                player.matrix.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            arena[y + player.pos.y][x + player.pos.x] = value;
+                        }
+                    });
+                });
+            }
+
+            function playerDrop() {
+                player.pos.y++;
+                if (collide(arena, player)) {
+                    player.pos.y--;
+                    merge(arena, player);
+                    playerReset();
+                    arenaSweep();
+                }
+                dropCounter = 0;
+            }
+
+            function playerMove(dir) {
+                player.pos.x += dir;
+                if (collide(arena, player)) {
+                    player.pos.x -= dir;
+                }
+            }
+
+            function playerReset() {
+                const pieces = 'TJLOSZI';
+                player.matrix = createPiece(pieces[(pieces.length * Math.random()) | 0]);
+                player.pos.y = 0;
+                player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+                if (collide(arena, player)) {
+                    arena.forEach(row => row.fill(0));
+                }
+            }
+
+            function playerRotate() {
+                const posX = player.pos.x;
+                let offset = 1;
+                rotate(player.matrix);
+                while (collide(arena, player)) {
+                    player.pos.x += offset;
+                    offset = -(offset + (offset > 0 ? 1 : -1));
+                    if (offset > player.matrix[0].length) {
+                        rotate(player.matrix);
+                        player.pos.x = posX;
+                        return;
+                    }
+                }
+            }
+
+            function rotate(matrix) {
+                for (let y = 0; y < matrix.length; ++y) {
+                    for (let x = 0; x < y; ++x) {
+                        matrix[x][y] = matrix[y][x];
+                        matrix[y][x] = matrix[x][y];
+                    }
+                }
+                matrix.forEach(row => row.reverse());
+            }
+
+            let dropCounter = 0;
+            let dropInterval = 1000;
+            let lastTime = 0;
+
+            function update(time = 0) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    playerDrop();
+                }
+                draw();
+                requestAnimationFrame(update);
+            }
+
+            const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+            const arena = createMatrix(12, 20);
+            const player = {pos: {x: 0, y: 0}, matrix: null};
+
+            document.addEventListener('keydown', event => {
+                if (event.keyCode === 37) playerMove(-1);
+                else if (event.keyCode === 39) playerMove(1);
+                else if (event.keyCode === 40) playerDrop();
+                else if (event.keyCode === 38) playerRotate();
+            });
+
+            playerReset();
+            update();
+        </script>
+        """
+    st.components.v1.html(tetris_html, height=540)
 
   # FREE GAME 4: Geometry Dash
   elif "Geometry Dash" in game_choice:
     st.subheader("🔻 Geometry Dash (Free Classic)")
-    st.info("🕹️ **Controls:** Tap the screen or press Spacebar / Up Arrow to jump!")
+    st.info("🕹️ **Controls:** Tap screen or use Spacebar / Up Arrow to jump!")
     st.components.v1.iframe(
-        "https://freegeometrydash.com/geometry-dash-lite.embed",
-        height=620,
+        "https://scratch.mit.edu/projects/623277732/embed",
+        height=520,
         scrolling=False,
     )
 
@@ -200,14 +375,6 @@ if app_mode == "Arcade Games":
       )
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
-      st.markdown(
-          '<a href="https://hexgl.bkcore.com/play/" target="_blank"'
-          ' style="display: inline-block; background-color: #00ffcc; color:'
-          ' #0b0f19; padding: 10px 20px; font-weight: bold; border-radius:'
-          ' 6px; text-decoration: none; margin-bottom: 12px;">🚀 Launch Game'
-          ' in New Fullscreen Tab</a>',
-          unsafe_allow_html=True,
-      )
       st.components.v1.iframe(
           "https://hexgl.bkcore.com/play/", height=550, scrolling=False
       )
@@ -221,9 +388,8 @@ if app_mode == "Arcade Games":
       )
     else:
       st.subheader("🧟 3D Zombie Survival (👑 VIP Unlocked)")
-      st.info("🕹️ **Controls:** WASD / Touch controls to move and eliminate waves.")
       st.components.v1.iframe(
-          "https://play.gamepix.com/zombie-derby-pixel-survival/embed",
+          "https://www.crazygames.com/embed/zombie-derby",
           height=600,
           scrolling=False,
       )
@@ -237,9 +403,8 @@ if app_mode == "Arcade Games":
       )
     else:
       st.subheader("🚀 3D Space Shooter (👑 VIP Unlocked)")
-      st.info("🕹️ **Controls:** Drag or tap to navigate your ship and shoot enemy fleets.")
       st.components.v1.iframe(
-          "https://play.gamepix.com/space-blaze-2/embed",
+          "https://www.crazygames.com/embed/space-wars",
           height=600,
           scrolling=False,
       )
