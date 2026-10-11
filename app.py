@@ -106,27 +106,37 @@ if app_mode == "Arcade Games":
       ],
   )
 
-  # FREE GAME 1: Snake
+  # FREE GAME 1: Snake (Mobile Touch + PC Controls)
   if "Snake" in game_choice:
     st.subheader("🐍 Snake (Free Classic)")
     snake_html = """
-        <div style="text-align: center;">
-            <canvas id="gc" width="400" height="400" style="background-color: #111; border: 3px solid #4CAF50; border-radius: 8px;"></canvas>
-            <p style="color: #888; font-family: sans-serif; font-size: 14px; margin-top: 8px;">Controls: Arrow Keys (← ↑ → ↓)</p>
+        <div style="text-align: center; background: #0b0f19; padding: 15px; border-radius: 12px; border: 2px solid #4CAF50;">
+            <canvas id="gc" width="320" height="320" style="background-color: #111; border: 2px solid #4CAF50; border-radius: 8px;"></canvas>
+            <p style="color: #888; font-family: sans-serif; font-size: 13px; margin: 8px 0;">PC: Arrow Keys | Mobile: Tap controls below</p>
+            
+            <!-- Mobile Touch Controls -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px;">
+                <button onclick="changeDir(38)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 25px; font-size: 18px; border-radius: 8px; cursor: pointer;">⬆️ UP</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="changeDir(37)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 20px; font-size: 18px; border-radius: 8px; cursor: pointer;">⬅️ LEFT</button>
+                    <button onclick="changeDir(40)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 20px; font-size: 18px; border-radius: 8px; cursor: pointer;">⬇️ DOWN</button>
+                    <button onclick="changeDir(39)" style="background: #1f2937; color: white; border: 2px solid #4CAF50; padding: 10px 20px; font-size: 18px; border-radius: 8px; cursor: pointer;">RIGHT ➡️</button>
+                </div>
+            </div>
         </div>
         <script>
             window.onload = function() {
                 canv = document.getElementById("gc");
                 ctx = canv.getContext("2d");
                 document.addEventListener("keydown", keyPush);
-                setInterval(game, 1000/15);
+                setInterval(game, 1000/12);
             }
-            px=py=10; gs=tc=20; ax=ay=15; xv=yv=0; trail=[]; tail = 5;
+            px=py=10; gs=tc=16; ax=ay=12; xv=yv=0; trail=[]; tail = 5;
             function game() {
                 px+=xv; py+=yv;
                 if(px<0) px=tc-1; if(px>tc-1) px=0;
                 if(py<0) py=tc-1; if(py>tc-1) py=0;
-                ctx.fillStyle="black"; ctx.fillRect(0,0,canv.width,canv.height);
+                ctx.fillStyle="#111"; ctx.fillRect(0,0,canv.width,canv.height);
                 ctx.fillStyle="lime";
                 for(var i=0;i<trail.length;i++) {
                     ctx.fillRect(trail[i].x*gs,trail[i].y*gs,gs-2,gs-2);
@@ -140,33 +150,34 @@ if app_mode == "Arcade Games":
                 }
                 ctx.fillStyle="red"; ctx.fillRect(ax*gs,ay*gs,gs-2,gs-2);
             }
-            function keyPush(evt) {
-                switch(evt.keyCode) {
-                    case 37: xv=-1;yv=0; break;
-                    case 38: xv=0;yv=-1; break;
-                    case 39: xv=1;yv=0; break;
-                    case 40: xv=0;yv=1; break;
+            function changeDir(keyCode) {
+                switch(keyCode) {
+                    case 37: if(xv!=1){xv=-1;yv=0;} break;
+                    case 38: if(yv!=1){xv=0;yv=-1;} break;
+                    case 39: if(xv!=-1){xv=1;yv=0;} break;
+                    case 40: if(yv!=-1){xv=0;yv=1;} break;
                 }
             }
+            function keyPush(evt) { changeDir(evt.keyCode); }
         </script>
         """
-    st.components.v1.html(snake_html, height=480)
+    st.components.v1.html(snake_html, height=560)
 
-  # FREE GAME 2: 2048
+  # FREE GAME 2: 2048 (Native Swipe Touch Support)
   elif "2048" in game_choice:
     st.subheader("🎲 2048 (Free Classic)")
     st.components.v1.iframe(
         "https://2048game.com/", height=600, scrolling=True
     )
 
-  # FREE GAME 3: Tetris
+  # FREE GAME 3: English Mobile Tetris
   elif "Tetris" in game_choice:
     st.subheader("🧩 Tetris (Free Classic)")
     st.components.v1.iframe(
-        "https://chvin.github.io/react-tetris/", height=600, scrolling=False
+        "https://austin-nguyen.github.io/tetris/", height=620, scrolling=False
     )
 
-  # VIP HIGH QUALITY GAME: 3D Cyber Racer
+  # VIP HIGH QUALITY GAME: 3D Cyber Racer with Touch Pad & Fullscreen Options
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -177,24 +188,44 @@ if app_mode == "Arcade Games":
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
       st.info(
-          "🕹️ **How to play:** Click inside the game window below to use WASD"
-          " / Arrow keys, OR click the button below to open it in a clean full"
-          " screen tab!"
+          "🕹️ **Controls:** Use WASD / Arrow keys on PC, or use the touch"
+          " buttons below on Mobile!"
       )
 
-      # Safe target=_blank link to avoid locking the Streamlit frame app
       st.markdown(
           '<a href="https://hexgl.bkcore.com/play/" target="_blank"'
           ' style="display: inline-block; background-color: #00ffcc; color:'
           ' #0b0f19; padding: 10px 20px; font-weight: bold; border-radius:'
-          ' 6px; text-decoration: none; margin-bottom: 10px;">🚀 Launch Game'
+          ' 6px; text-decoration: none; margin-bottom: 12px;">🚀 Launch Game'
           ' in New Fullscreen Tab</a>',
           unsafe_allow_html=True,
       )
 
-      st.components.v1.iframe(
-          "https://hexgl.bkcore.com/play/", height=550, scrolling=False
-      )
+      cyber_racer_html = """
+            <div style="text-align: center; background: #0b0f19; padding: 10px; border-radius: 12px; border: 2px solid #00ffcc;">
+                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="450px" style="border:none; border-radius: 8px;" allowfullscreen="true"></iframe>
+                
+                <p style="color: #00ffcc; font-family: sans-serif; font-size: 13px; margin: 10px 0 5px 0; font-weight: bold;">📱 Mobile Touch Controls</p>
+                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="sendKey(37)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">⬅️ Left</button>
+                    <button onclick="sendKey(38)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Gas</button>
+                    <button onclick="sendKey(39)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">Right ➡️</button>
+                    <button onclick="sendKey(40)" style="background: #1f2937; color: white; border: 2px solid #ff4444; padding: 10px 18px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">🛑 Brake</button>
+                </div>
+            </div>
+            <script>
+                function sendKey(keyCode) {
+                    var iframe = document.querySelector('iframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyCode, 'which': keyCode}));
+                        setTimeout(function() {
+                            iframe.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': keyCode, 'which': keyCode}));
+                        }, 100);
+                    }
+                }
+            </script>
+            """
+      st.components.v1.html(cyber_racer_html, height=580)
 
 elif app_mode == "Chat & AI":
   # Render Chat History
