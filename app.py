@@ -78,13 +78,17 @@ with st.sidebar:
       with st.spinner("🎬 Generating cinematic AI video..."):
         prompt_lower = video_prompt_input.lower()
 
-        # Stable, high-speed direct MP4 video streams
-        if "space" in prompt_lower or "galaxy" in prompt_lower:
-          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-        elif "bird" in prompt_lower or "fly" in prompt_lower:
-          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+        # Ultra-fast, lightweight Web MP4 video links that load instantly
+        if "bird" in prompt_lower or "fly" in prompt_lower:
+          video_url = "https://assets.mixkit.co/videos/preview/mixkit-bird-flying-in-the-sky-42358-large.mp4"
+        elif "space" in prompt_lower or "galaxy" in prompt_lower:
+          video_url = "https://assets.mixkit.co/videos/preview/mixkit-space-flight-through-a-galaxy-of-stars-42118-large.mp4"
+        elif "nature" in prompt_lower or "forest" in prompt_lower:
+          video_url = "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-forest-in-the-fog-41655-large.mp4"
+        elif "water" in prompt_lower or "ocean" in prompt_lower:
+          video_url = "https://assets.mixkit.co/videos/preview/mixkit-sea-waves-reaching-the-sand-of-a-beach-41580-large.mp4"
         else:
-          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          video_url = "https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-vehicles-41566-large.mp4"
 
         st.session_state.messages.append({
             "role": "assistant",
