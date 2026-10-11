@@ -164,7 +164,7 @@ if app_mode == "Arcade Games":
         """
     st.components.v1.html(snake_html, height=560)
 
-  # 2. 2048 (ORIGINAL FIXED)
+  # 2. 2048 (STABLE ORIGINAL EMBED)
   elif "2048" in game_choice:
     st.subheader("🎲 2048 (Free Classic)")
     st.components.v1.iframe(
@@ -178,17 +178,14 @@ if app_mode == "Arcade Games":
         "https://tetris.com/play-tetris", height=620, scrolling=True
     )
 
-  # 4. GEOMETRY DASH (FULL WEBGL ORIGINAL)
+  # 4. GEOMETRY DASH
   elif "Geometry Dash" in game_choice:
     st.subheader("🔻 Geometry Dash (Free Classic)")
-    st.info("🕹️ Use Spacebar, Up-Arrow or Mouse Click to jump!")
     st.components.v1.iframe(
-        "https://html5.gamedistribution.com/rvvASMiM/5e7bc05504114777a94ef9d27cc1dd0e/",
-        height=580,
-        scrolling=False,
+        "https://geometrydash.io/", height=600, scrolling=True
     )
 
-  # 5. VIP: 3D CYBER RACER
+  # 5. VIP: 3D CYBER RACER (DAS URSPRÜNGLICHE, PERFEKTE SPIEL)
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -201,7 +198,7 @@ if app_mode == "Arcade Games":
           "https://hexgl.bkcore.com/play/", height=550, scrolling=False
       )
 
-  # 6. VIP: 3D ZOMBIE SURVIVAL (HIGH-END 3D ACTION)
+  # 6. VIP: 3D ZOMBIE SURVIVAL (STABILER 3D EMBED)
   elif "3D Zombie Survival" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -211,12 +208,12 @@ if app_mode == "Arcade Games":
     else:
       st.subheader("🧟 3D Zombie Survival (👑 VIP Unlocked)")
       st.components.v1.iframe(
-          "https://html5.gamedistribution.com/rvvASMiM/4b2e8a1d17964b189b88e0c0fa919e91/",
+          "https://www.crazygames.com/embed/zombie-derby",
           height=600,
           scrolling=False,
       )
 
-  # 7. VIP: 3D SPACE SHOOTER (HIGH-END 3D ACTION)
+  # 7. VIP: 3D SPACE SHOOTER (STABILER 3D EMBED)
   elif "3D Space Shooter" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -226,7 +223,7 @@ if app_mode == "Arcade Games":
     else:
       st.subheader("🚀 3D Space Shooter (👑 VIP Unlocked)")
       st.components.v1.iframe(
-          "https://html5.gamedistribution.com/rvvASMiM/a883984ff2e947d3b2bf40d89e5a1b5c/",
+          "https://www.crazygames.com/embed/space-wars",
           height=600,
           scrolling=False,
       )
