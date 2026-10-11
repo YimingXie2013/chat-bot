@@ -78,34 +78,40 @@ with st.sidebar:
       with st.spinner("🎬 Generating cinematic AI video..."):
         prompt_lower = video_prompt_input.lower()
 
-        # Dynamic high-quality MP4 video mapping based on keywords
+        # Reliable high-quality animation GIFs mapped to keywords
         if (
             "space" in prompt_lower
             or "galaxy" in prompt_lower
             or "star" in prompt_lower
         ):
-          video_url = "https://assets.mixkit.co/videos/preview/mixkit-space-flight-through-a-galaxy-of-stars-42118-large.mp4"
+          video_url = "https://media4.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif"
         elif (
             "nature" in prompt_lower
             or "forest" in prompt_lower
             or "bird" in prompt_lower
             or "fly" in prompt_lower
         ):
-          video_url = "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-forest-in-the-fog-41655-large.mp4"
+          video_url = "https://media3.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif"
         elif (
             "cyber" in prompt_lower
             or "neon" in prompt_lower
             or "city" in prompt_lower
         ):
-          video_url = "https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-vehicles-41566-large.mp4"
+          video_url = (
+              "https://media2.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif"
+          )
         elif (
             "water" in prompt_lower
             or "ocean" in prompt_lower
             or "sea" in prompt_lower
         ):
-          video_url = "https://assets.mixkit.co/videos/preview/mixkit-sea-waves-reaching-the-sand-of-a-beach-41580-large.mp4"
+          video_url = (
+              "https://media1.giphy.com/media/l0HlRnAWXxn0MhOBK/giphy.gif"
+          )
         else:
-          video_url = "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-code-31910-large.mp4"
+          video_url = (
+              "https://media4.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif"
+          )
 
         st.session_state.messages.append({
             "role": "assistant",
@@ -197,15 +203,8 @@ else:
       if "image_url" in message and message["image_url"]:
         st.image(message["image_url"])
       if "video_url" in message and message["video_url"]:
-        video_html = f"""
-                <div style="text-align: center; margin-top: 10px;">
-                    <video width="100%" height="auto" autoplay loop muted playsinline controls style="border-radius: 8px; max-height: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <source src="{message["video_url"]}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-                """
-        st.components.v1.html(video_html, height=340)
+        # Render GIF smoothly using st.image
+        st.image(message["video_url"], width=500)
 
   # Main Chat Input
   if user_input := st.chat_input("Type your message here..."):
