@@ -197,7 +197,15 @@ else:
       if "image_url" in message and message["image_url"]:
         st.image(message["image_url"])
       if "video_url" in message and message["video_url"]:
-        st.video(message["video_url"])
+        video_html = f"""
+                <div style="text-align: center; margin-top: 10px;">
+                    <video width="100%" height="auto" autoplay loop muted playsinline controls style="border-radius: 8px; max-height: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <source src="{message["video_url"]}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                """
+        st.components.v1.html(video_html, height=340)
 
   # Main Chat Input
   if user_input := st.chat_input("Type your message here..."):
