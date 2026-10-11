@@ -164,24 +164,21 @@ if app_mode == "Arcade Games":
         """
     st.components.v1.html(snake_html, height=560)
 
-  # 2. 2048 (GARANTIERT STABILER ALTERnatives EMBED)
+  # 2. 2048 (GARANTIERT STABILER ORIGINAL GITHUB-MIRROR)
   elif "2048" in game_choice:
     st.subheader("🎲 2048 (Free Classic)")
     st.components.v1.iframe(
-        "https://m.2048.gygames.co/", height=600, scrolling=True
+        "https://gabrielecirulli.github.io/2048/", height=600, scrolling=True
     )
 
-  # 3. TETRIS (Natives High-Performance HTML5 Grid)
+  # 3. TETRIS
   elif "Tetris" in game_choice:
     st.subheader("🧩 Tetris (Free Classic)")
-    tetris_html = """
-        <div style="text-align: center; background: #0b0f19; padding: 15px; border-radius: 12px; border: 2px solid #3b82f6;">
-            <iframe src="https://tetris.com/play-tetris" style="width:100%; height:500px; border:none; border-radius:8px;" scrolling="no"></iframe>
-        </div>
-        """
-    st.components.v1.html(tetris_html, height=540)
+    st.components.v1.iframe(
+        "https://tetris.com/play-tetris", height=620, scrolling=True
+    )
 
-  # 4. GEOMETRY DASH (STABILER ARCADE EMBED)
+  # 4. GEOMETRY DASH
   elif "Geometry Dash" in game_choice:
     st.subheader("🔻 Geometry Dash (Free Classic)")
     st.components.v1.iframe(
@@ -190,7 +187,7 @@ if app_mode == "Arcade Games":
         scrolling=False,
     )
 
-  # 5. VIP: 3D CYBER RACER (DAS ORIGINAL)
+  # 5. VIP: 3D CYBER RACER
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
