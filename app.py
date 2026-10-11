@@ -34,35 +34,35 @@ with st.sidebar:
 
   # Premium Badge Status
   if st.session_state.is_premium:
-    st.success("👑 VIP PRO Status: AKTIV")
+    st.success("👑 VIP PRO Status: ACTIVE")
   else:
-    st.info("🔓 Free Version (3D Games gesperrt)")
+    st.info("🔓 Free Version (3D Games Locked)")
 
   app_mode = st.radio(
-      "Wähle einen Modus:", ["Chat & AI", "HD Image Generator", "Arcade Games"]
+      "Select Mode:", ["Chat & AI", "HD Image Generator", "Arcade Games"]
   )
 
   # VIP Unlock Code Section
   st.markdown("---")
-  st.subheader("🔑 VIP Key Einlösen")
+  st.subheader("🔑 Redeem VIP Key")
   promo_code = st.text_input(
-      "VIP Code eingeben:", type="password", key="vip_input"
+      "Enter VIP Code:", type="password", key="vip_input"
   )
-  if st.button("Code Freischalten"):
-    if promo_code == "PRO2026":  # Dein persönlicher Master-Code
+  if st.button("Unlock Code"):
+    if promo_code == "PRO2026":  # Master VIP Key
       st.session_state.is_premium = True
-      st.success("🎉 VIP Status erfolgreich aktiviert!")
+      st.success("🎉 VIP Status Successfully Activated!")
       st.rerun()
     else:
-      st.error("❌ Ungültiger VIP-Code!")
+      st.error("❌ Invalid VIP Code!")
 
   if app_mode == "HD Image Generator":
     st.markdown("---")
     st.subheader("🎨 Flux HD Image Generator")
-    image_prompt_input = st.text_input("Was möchtest du generieren?")
+    image_prompt_input = st.text_input("What do you want to generate?")
 
-    if st.button("Bild Generieren") and image_prompt_input:
-      with st.spinner("🎨 KI generiert dein HD-Bild..."):
+    if st.button("Generate Image") and image_prompt_input:
+      with st.spinner("🎨 AI is generating your HD image..."):
         try:
           client = Groq(api_key=api_key)
           translation_response = client.chat.completions.create(
@@ -87,21 +87,21 @@ with st.sidebar:
 
         st.session_state.messages.append({
             "role": "assistant",
-            "content": f"Hier ist dein HD-Bild für: *{image_prompt_input}*",
+            "content": f"Here is your HD image for: *{image_prompt_input}*",
             "image_url": img_url,
         })
-        st.success("Bild fertig! Wechsel zum 'Chat & AI' Tab um es zu sehen.")
+        st.success("Image ready! Switch to the 'Chat & AI' tab to view it.")
 
 # Main Rendering Logic
 if app_mode == "Arcade Games":
   st.header("🕹️ Arcade Game Hub")
 
   game_choice = st.selectbox(
-      "Wähle ein Spiel aus:",
+      "Choose a game:",
       [
-          "🐍 Snake (Kostenlos)",
-          "🎲 2048 (Kostenlos)",
-          "🧩 Tetris (Kostenlos)",
+          "🐍 Snake (Free)",
+          "🎲 2048 (Free)",
+          "🧩 Tetris (Free)",
           "🏎️ 3D Cyber Racer (👑 VIP High-Quality)",
       ],
   )
@@ -112,7 +112,7 @@ if app_mode == "Arcade Games":
     snake_html = """
         <div style="text-align: center;">
             <canvas id="gc" width="400" height="400" style="background-color: #111; border: 3px solid #4CAF50; border-radius: 8px;"></canvas>
-            <p style="color: #888; font-family: sans-serif; font-size: 14px; margin-top: 8px;">Steuerung mit den Pfeiltasten (← ↑ → ↓)</p>
+            <p style="color: #888; font-family: sans-serif; font-size: 14px; margin-top: 8px;">Controls: Arrow Keys (← ↑ → ↓)</p>
         </div>
         <script>
             window.onload = function() {
@@ -166,49 +166,39 @@ if app_mode == "Arcade Games":
         "https://chvin.github.io/react-tetris/", height=600, scrolling=False
     )
 
-  # VIP HIGH QUALITY GAME: 3D Cyber Racer mit Touch Controls für Smartphones
+  # VIP HIGH QUALITY GAME: 3D Cyber Racer
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
-          "🔒 **3D Cyber Racer ist ein exklusives VIP-Spitzenklasse-Spiel!**\n\n"
-          "Dieses High-Quality-Game steht nur Premium-Mitgliedern zur"
-          " Verfügung.\nGib deinen VIP-Key (`PRO2026`) in der Sidebar ein, um"
-          " sofort loszuzocken!"
+          "🔒 **3D Cyber Racer is an exclusive VIP High-Quality game!**\n\n"
+          "This premium 3D game is reserved for PRO members.\n"
+          "Enter your VIP Key (`PRO2026`) in the sidebar to unlock it!"
       )
     else:
       st.subheader("🏎️ 3D Cyber Racer (👑 VIP Unlocked)")
-      st.markdown(
-          "📱 *PC: Nutzen Sie WASD oder Pfeiltasten | Handy: Nutzen Sie die"
-          " Touch-Buttons unten!*"
+      st.info(
+          "🕹️ **How to play on PC:** Click inside the game window below to"
+          " enable WASD / Arrow controls, OR click **'Open Fullscreen Game'**"
+          " to play without any page scrolling!"
       )
 
-      # High-End HTML-Container inklusive eingebettetem Spiel und optimierten Touch-Steuerungs-Buttons für Smartphones
+      st.markdown(
+          "[🚀 Open Fullscreen Game Mode](https://hexgl.bkcore.com/play/)"
+      )
+
       cyber_racer_html = """
             <div style="text-align: center; background: #0b0f19; padding: 10px; border-radius: 12px; border: 2px solid #00ffcc;">
-                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="450px" style="border:none; border-radius: 8px;" allowfullscreen="true"></iframe>
-                
-                <p style="color: #00ffcc; font-family: sans-serif; font-size: 14px; margin: 10px 0 5px 0; font-weight: bold;">📱 Mobile Touch Steuerung</p>
-                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="sendKey(37)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;">⬅️ Links</button>
-                    <button onclick="sendKey(38)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Gas</button>
-                    <button onclick="sendKey(39)" style="background: #1f2937; color: white; border: 2px solid #00ffcc; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;"> Rechts ➡️</button>
-                    <button onclick="sendKey(40)" style="background: #1f2937; color: white; border: 2px solid #ff4444; padding: 12px 20px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold;"> 🛑 Bremse</button>
-                </div>
+                <iframe src="https://hexgl.bkcore.com/play/" width="100%" height="500px" id="gameFrame" style="border:none; border-radius: 8px;" tabindex="0"></iframe>
             </div>
             <script>
-                function sendKey(keyCode) {
-                    // Simuliert Tastendrücke für das Iframe-Spiel
-                    var iframe = document.querySelector('iframe');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyCode, 'which': keyCode}));
-                        setTimeout(function() {
-                            iframe.contentWindow.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': keyCode, 'which': keyCode}));
-                        }, 100);
-                    }
-                }
+                // Focus iframe automatically on load
+                window.onload = function() {
+                    var frame = document.getElementById('gameFrame');
+                    if (frame) { frame.focus(); }
+                };
             </script>
             """
-      st.components.v1.html(cyber_racer_html, height=580)
+      st.components.v1.html(cyber_racer_html, height=540)
 
 elif app_mode == "Chat & AI":
   # Render Chat History
@@ -219,14 +209,14 @@ elif app_mode == "Chat & AI":
         st.image(message["image_url"])
 
   # Main Chat Input
-  if user_input := st.chat_input("Schreibe eine Nachricht..."):
+  if user_input := st.chat_input("Type a message..."):
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
       st.markdown(user_input)
 
     with st.chat_message("assistant"):
       message_placeholder = st.empty()
-      message_placeholder.markdown("*KI denkt nach...*")
+      message_placeholder.markdown("*AI is thinking...*")
 
       try:
         client = Groq(api_key=api_key)
@@ -247,4 +237,4 @@ elif app_mode == "Chat & AI":
         )
 
       except Exception as api_error:
-        message_placeholder.markdown(f"⚠️ **Fehler:** {api_error}")
+        message_placeholder.markdown(f"⚠️ **Error:** {api_error}")
