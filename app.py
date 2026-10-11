@@ -78,43 +78,13 @@ with st.sidebar:
       with st.spinner("🎬 Generating cinematic AI video..."):
         prompt_lower = video_prompt_input.lower()
 
-        # Fixed reliable animation GIFs mapped correctly to keywords
-        if "bird" in prompt_lower or "fly" in prompt_lower:
-          video_url = (
-              "https://media2.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif"
-          )
-        elif (
-            "space" in prompt_lower
-            or "galaxy" in prompt_lower
-            or "star" in prompt_lower
-        ):
-          video_url = "https://media4.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif"
-        elif (
-            "nature" in prompt_lower
-            or "forest" in prompt_lower
-            or "tree" in prompt_lower
-        ):
-          video_url = "https://media3.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif"
-        elif (
-            "cyber" in prompt_lower
-            or "neon" in prompt_lower
-            or "city" in prompt_lower
-        ):
-          video_url = (
-              "https://media2.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif"
-          )
-        elif (
-            "water" in prompt_lower
-            or "ocean" in prompt_lower
-            or "sea" in prompt_lower
-        ):
-          video_url = (
-              "https://media1.giphy.com/media/l0HlRnAWXxn0MhOBK/giphy.gif"
-          )
+        # Stable, high-speed direct MP4 video streams
+        if "space" in prompt_lower or "galaxy" in prompt_lower:
+          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+        elif "bird" in prompt_lower or "fly" in prompt_lower:
+          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
         else:
-          video_url = (
-              "https://media4.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif"
-          )
+          video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
 
         st.session_state.messages.append({
             "role": "assistant",
@@ -206,7 +176,7 @@ else:
       if "image_url" in message and message["image_url"]:
         st.image(message["image_url"])
       if "video_url" in message and message["video_url"]:
-        st.image(message["video_url"], width=500)
+        st.video(message["video_url"])
 
   # Main Chat Input
   if user_input := st.chat_input("Type your message here..."):
