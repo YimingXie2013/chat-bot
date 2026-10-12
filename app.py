@@ -189,7 +189,7 @@ if app_mode == "Arcade Games":
         unsafe_allow_html=True,
     )
 
-  # 3. TETRIS (100% UNBERÜHRT)
+  # 3. TETRIS (100% UNTOUCHED)
   elif "Tetris" in game_choice:
     st.subheader("🧩 Tetris (Free Classic)")
     st.components.v1.iframe(
@@ -211,7 +211,7 @@ if app_mode == "Arcade Games":
         unsafe_allow_html=True,
     )
 
-  # 5. VIP: 3D CYBER RACER (100% UNBERÜHRT)
+  # 5. VIP: 3D CYBER RACER (100% UNTOUCHED)
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -271,31 +271,36 @@ if app_mode == "Arcade Games":
 elif app_mode == "✨ AI Game Creator & Vault":
   st.header("✨ AI Game Generator & Private Vault")
   st.markdown(
-      "Beschreibe dein eigenes Wunschspiel! Die KI generiert daraus ein"
-      " echtes HTML5-Spiel, das exklusiv und **privat in deiner Vault**"
-      " gespeichert wird."
+      "Describe your dream game! The AI will cook up a fully functional, high-quality HTML5 game "
+      "with clean vector graphics, smooth physics, and a responsive design, saved exclusively "
+      "and **privately in your personal vault**."
   )
 
   # Input for new game prompt
   game_prompt = st.text_area(
-      "Deine Spielidee (z.B. 'Ein Catch-Spiel, bei dem man Äpfel mit einem"
-      " Körbchen fängt'):"
+      "Your Game Idea (e.g., 'A cat catching mice with custom paddle mechanics'):",
+      value="A smooth arcade game where a cat character catches falling mice.",
   )
-  game_title_input = st.text_input(
-      "Titel des Spiels:", value="Mein Custom Game"
-  )
+  game_title_input = st.text_input("Game Title:", value="My Custom Arcade Game")
 
-  if st.button("🚀 Spiel generieren & in Vault speichern") and game_prompt:
-    with st.spinner("🤖 Die KI baut dein individuelles Spiel..."):
+  if st.button("🚀 Generate Game & Save to Vault") and game_prompt:
+    with st.spinner(
+        "🤖 AI is cooking up your masterpiece (building rich HTML5 canvas"
+        " graphics & game loops)..."
+    ):
       try:
         client = Groq(api_key=api_key)
+        # Heavy-duty master chef system prompt ensuring high quality, no emojis, clean custom graphics & robust gameplay
         system_instructions = (
-            "You are an expert HTML5 game developer. "
-            "Write a complete, self-contained HTML5/JavaScript game based on the user's prompt. "
-            "It must include embedded CSS inside <style> and JavaScript inside <script>. "
-            "Make it fully playable within a responsive container (width max 400px or centered canvas). "
-            "CRITICAL: Return ONLY valid HTML code starting with <div> or <html> and ending with respective tags. "
-            "Do NOT wrap it in markdown block quotes like ```html, just output raw HTML/JS code."
+            "You are an elite, senior HTML5 game developer and master game designer. "
+            "Your task is to write a complete, self-contained, highly polished HTML5/JavaScript game based on the user's prompt. "
+            "STRICT DESIGN RULES:\n"
+            "1. DO NOT use emojis for game characters or main objects. Instead, draw clean, crisp vector shapes, glowing gradients, rounded rectangles, and custom paths using the HTML5 Canvas API (ctx.arc, ctx.fillRect, custom bezier curves, etc.) so it looks professional.\n"
+            "2. Make the game fully playable with keyboard controls (Arrow keys / WASD / Spacebar) and/or intuitive on-screen touch control buttons rendered in HTML below the canvas for mobile users.\n"
+            "3. Include a clean HUD (Score, Lives/Health, Timer) styled with modern CSS (dark mode, neon highlights, crisp fonts).\n"
+            "4. Include a proper game loop, collision detection, game over state, and restart functionality.\n"
+            "5. CRITICAL: Return ONLY raw HTML code starting with <!DOCTYPE html> or <div> and ending with respective tags. "
+            "Do NOT wrap the output in markdown code blocks like ```html ... ```, just output the exact raw HTML/JS code string."
         )
 
         completion = client.chat.completions.create(
@@ -321,32 +326,32 @@ elif app_mode == "✨ AI Game Creator & Vault":
             "code": generated_html,
         })
         st.success(
-            "🎉 Spiel erfolgreich erstellt und in deiner privaten Vault"
-            " abgelegt!"
+            "🎉 Game successfully created and stored safely in your private"
+            " vault!"
         )
       except Exception as e:
-        st.error(f"⚠️ Fehler bei der Generierung: {e}")
+        st.error(f"⚠️ Generation error: {e}")
 
   st.markdown("---")
-  st.subheader("🔒 Deine private Spiel-Vault (Nur für dich sichtbar)")
+  st.subheader("🔒 Your Private Game Vault (Visible only to you)")
 
   if not st.session_state.user_game_vault:
     st.info(
-        "Deine Vault ist noch leer. Erstelle oben dein erstes eigenes"
-        " KI-Spiel!"
+        "Your vault is currently empty. Generate your first custom AI game"
+        " above!"
     )
   else:
     # Select game from private vault
     vault_titles = [g["title"] for g in st.session_state.user_game_vault]
     selected_vault_game = st.selectbox(
-        "Wähle ein Spiel aus deiner Vault:", vault_titles
+        "Select a game from your Vault:", vault_titles
     )
 
     for g in st.session_state.user_game_vault:
       if g["title"] == selected_vault_game:
-        st.markdown(f"**Idee:** _{g['prompt']}_")
+        st.markdown(f"**Idea:** _{g['prompt']}_")
         # Render user's private game safely
-        st.components.v1.html(g["code"], height=480, scrolling=True)
+        st.components.v1.html(g["code"], height=520, scrolling=True)
 
 elif app_mode == "Chat & AI":
   # Render Chat History
