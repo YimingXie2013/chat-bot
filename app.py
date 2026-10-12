@@ -271,35 +271,36 @@ if app_mode == "Arcade Games":
 elif app_mode == "✨ AI Game Creator & Vault":
   st.header("✨ AI Game Generator & Private Vault")
   st.markdown(
-      "Describe your dream game! The AI will cook up a fully functional, high-quality HTML5 game "
-      "with clean vector graphics, smooth physics, and a responsive design, saved exclusively "
+      "Describe your dream game! The AI will cook up a fully functional, highly polished HTML5 canvas game "
+      "with robust physics, immediate startup, beautiful custom vector graphics, and smooth controls, saved exclusively "
       "and **privately in your personal vault**."
   )
 
   # Input for new game prompt
   game_prompt = st.text_area(
-      "Your Game Idea (e.g., 'A cat catching mice with custom paddle mechanics'):",
+      "Your Game Idea (e.g., 'A smooth arcade game where a cat catches falling mice'):",
       value="A smooth arcade game where a cat character catches falling mice.",
   )
   game_title_input = st.text_input("Game Title:", value="My Custom Arcade Game")
 
   if st.button("🚀 Generate Game & Save to Vault") and game_prompt:
     with st.spinner(
-        "🤖 AI is cooking up your masterpiece (building rich HTML5 canvas"
-        " graphics & game loops)..."
+        "🤖 AI is cooking up your masterpiece (building robust HTML5 canvas"
+        " loops & physics)..."
     ):
       try:
         client = Groq(api_key=api_key)
-        # Heavy-duty master chef system prompt ensuring high quality, no emojis, clean custom graphics & robust gameplay
+        # Master Chef System Prompt enforcing immediate self-starting loops and gorgeous vector graphics
         system_instructions = (
             "You are an elite, senior HTML5 game developer and master game designer. "
-            "Your task is to write a complete, self-contained, highly polished HTML5/JavaScript game based on the user's prompt. "
-            "STRICT DESIGN RULES:\n"
-            "1. DO NOT use emojis for game characters or main objects. Instead, draw clean, crisp vector shapes, glowing gradients, rounded rectangles, and custom paths using the HTML5 Canvas API (ctx.arc, ctx.fillRect, custom bezier curves, etc.) so it looks professional.\n"
-            "2. Make the game fully playable with keyboard controls (Arrow keys / WASD / Spacebar) and/or intuitive on-screen touch control buttons rendered in HTML below the canvas for mobile users.\n"
-            "3. Include a clean HUD (Score, Lives/Health, Timer) styled with modern CSS (dark mode, neon highlights, crisp fonts).\n"
-            "4. Include a proper game loop, collision detection, game over state, and restart functionality.\n"
-            "5. CRITICAL: Return ONLY raw HTML code starting with <!DOCTYPE html> or <div> and ending with respective tags. "
+            "Write a complete, self-contained, fully working HTML5/JavaScript game based on the user's prompt. "
+            "CRITICAL TECHNICAL REQUIREMENTS:\n"
+            "1. The game MUST start immediately upon loading (auto-init or explicit start button inside the canvas UI, NO frozen screens).\n"
+            "2. Implement a robust requestAnimationFrame game loop with clear update() and draw() functions.\n"
+            "3. Use clean vector graphics, custom paths, gradients, and shapes via HTML5 Canvas API (ctx.arc, ctx.fillRect, ctx.beginPath) – DO NOT use emojis.\n"
+            "4. Include interactive controls (keyboard Arrow keys / WASD and responsive on-screen buttons).\n"
+            "5. Include a modern HUD (Score, Lives, Timer) and clean Game Over state with restart logic.\n"
+            "6. CRITICAL: Return ONLY raw HTML code starting with <!DOCTYPE html> or <div> and ending with respective tags. "
             "Do NOT wrap the output in markdown code blocks like ```html ... ```, just output the exact raw HTML/JS code string."
         )
 
