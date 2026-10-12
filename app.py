@@ -26,6 +26,10 @@ if "messages" not in st.session_state:
 if "is_premium" not in st.session_state:
   st.session_state.is_premium = False
 
+# Private User Game Vault initialization (isolated per session/user)
+if "user_game_vault" not in st.session_state:
+  st.session_state.user_game_vault = []
+
 st.title("⚡ Llama AI Hub & Arcade")
 
 # Sidebar Navigation & Settings
@@ -39,7 +43,13 @@ with st.sidebar:
     st.info("🔓 Free Version (3D Games Locked)")
 
   app_mode = st.radio(
-      "Select Mode:", ["Chat & AI", "HD Image Generator", "Arcade Games"]
+      "Select Mode:",
+      [
+          "Chat & AI",
+          "HD Image Generator",
+          "Arcade Games",
+          "✨ AI Game Creator & Vault",
+      ],
   )
 
   # VIP Unlock Code Section
@@ -164,7 +174,7 @@ if app_mode == "Arcade Games":
         """
     st.components.v1.html(snake_html, height=560)
 
-  # 2. 2048 (DIREKTER BUTTON-LINK ALS FALLBACK GEGEN HEADER-BLOCKADEN)
+  # 2. 2048
   elif "2048" in game_choice:
     st.subheader("🎲 2048 (Free Classic)")
     st.markdown(
@@ -179,7 +189,7 @@ if app_mode == "Arcade Games":
         unsafe_allow_html=True,
     )
 
-  # 3. TETRIS (UNBERÜHRT & GELIEBT)
+  # 3. TETRIS (100% UNBERÜHRT)
   elif "Tetris" in game_choice:
     st.subheader("🧩 Tetris (Free Classic)")
     st.components.v1.iframe(
@@ -201,7 +211,7 @@ if app_mode == "Arcade Games":
         unsafe_allow_html=True,
     )
 
-  # 5. VIP: 3D CYBER RACER (DER UNBERÜHRTE 3D-TEIL)
+  # 5. VIP: 3D CYBER RACER (100% UNBERÜHRT)
   elif "3D Cyber Racer" in game_choice:
     if not st.session_state.is_premium:
       st.warning(
@@ -257,6 +267,86 @@ if app_mode == "Arcade Games":
           ' Shooter</a></div>',
           unsafe_allow_html=True,
       )
+
+elif app_mode == "✨ AI Game Creator & Vault":
+  st.header("✨ AI Game Generator & Private Vault")
+  st.markdown(
+      "Beschreibe dein eigenes Wunschspiel! Die KI generiert daraus ein"
+      " echtes HTML5-Spiel, das exklusiv und **privat in deiner Vault**"
+      " gespeichert wird."
+  )
+
+  # Input for new game prompt
+  game_prompt = st.text_area(
+      "Deine Spielidee (z.B. 'Ein Catch-Spiel, bei dem man Äpfel mit einem"
+      " Körbchen fängt'):"
+  )
+  game_title_input = st.text_input(
+      "Titel des Spiels:", value="Mein Custom Game"
+  )
+
+  if st.button("🚀 Spiel generieren & in Vault speichern") and game_prompt:
+    with st.spinner("🤖 Die KI baut dein individuelles Spiel..."):
+      try:
+        client = Groq(api_key=api_key)
+        system_instructions = (
+            "You are an expert HTML5 game developer. "
+            "Write a complete, self-contained HTML5/JavaScript game based on the user's prompt. "
+            "It must include embedded CSS inside <style> and JavaScript inside <script>. "
+            "Make it fully playable within a responsive container (width max 400px or centered canvas). "
+            "CRITICAL: Return ONLY valid HTML code starting with <div> or <html> and ending with respective tags. "
+            "Do NOT wrap it in markdown block quotes like ```html, just output raw HTML/JS code."
+        )
+
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": game_prompt},
+            ],
+            temperature=0.7,
+        )
+        generated_html = completion.choices[0].message.content.strip()
+
+        # Clean markdown wrappers if returned accidentally
+        if generated_html.startswith("```"):
+          generated_html = generated_html.split("```")[1]
+          if generated_html.startswith("html"):
+            generated_html = generated_html[4:]
+
+        # Save to private session user vault
+        st.session_state.user_game_vault.append({
+            "title": game_title_input,
+            "prompt": game_prompt,
+            "code": generated_html,
+        })
+        st.success(
+            "🎉 Spiel erfolgreich erstellt und in deiner privaten Vault"
+            " abgelegt!"
+        )
+      except Exception as e:
+        st.error(f"⚠️ Fehler bei der Generierung: {e}")
+
+  st.markdown("---")
+  st.subheader("🔒 Deine private Spiel-Vault (Nur für dich sichtbar)")
+
+  if not st.session_state.user_game_vault:
+    st.info(
+        "Deine Vault ist noch leer. Erstelle oben dein erstes eigenes"
+        " KI-Spiel!"
+    )
+  else:
+    # Select game from private vault
+    vault_titles = [g["title"] for g in st.session_state.user_game_vault]
+    selected_vault_game = st.selectbox(
+        "Wähle ein Spiel aus deiner Vault:", vault_titles
+    )
+
+    for g in st.session_state.user_game_vault:
+      if g["title"] == selected_vault_game:
+        st.markdown(f"**Idee:** _{g['prompt']}_")
+        # Render user's private game safely
+        st.components.v1.html(g["code"], height=480, scrolling=True)
 
 elif app_mode == "Chat & AI":
   # Render Chat History
