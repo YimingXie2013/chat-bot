@@ -227,7 +227,6 @@ if app_mode == "Arcade Games":
             function keyPush(evt) { changeDir(evt.keyCode); }
         </script>
         """
-    )
     st.components.v1.html(snake_html, height=560)
 
   # 2. 2048
@@ -324,7 +323,7 @@ if app_mode == "Arcade Games":
           unsafe_allow_html=True,
       )
 
-# GAMBLE STATION CATEGORY (HIGH-END DARK THEME + HOUSE EDGE + ANIMATED PLINKO & JACKPOT WITH VISIBLE 'X' LABELS)
+# GAMBLE STATION CATEGORY
 elif app_mode == "🎰 Gamble Station (High-End)":
   st.header("🎰 Gamble Station Originals")
   st.caption(
@@ -352,18 +351,13 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         "Number of Hidden Bombs:", min_value=1, max_value=10, value=3
     )
 
-    mines_html = (
-        """
+    mines_html = f"""
         <div style="text-align:center; background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); padding:25px; border-radius:16px; border:2px solid #10b981; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
                 <h3 style="color:#10b981; margin:0; font-size: 18px;">💎 MINES ARENA</h3>
                 <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
-            <p style="color:#94a3b8; margin:8px 0; font-size: 14px;">Active Bet: """
-        + str(bet_amount)
-        + """ | Bombs: """
-        + str(num_bombs)
-        + """</p>
+            <p style="color:#94a3b8; margin:8px 0; font-size: 14px;">Active Bet: {bet_amount} | Bombs: {num_bombs}</p>
             <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:340px; margin:20px auto;"></div>
             <div style="margin-top:15px;">
                 <button id="cashoutBtn" onclick="cashout()" style="background:#10b981; color:white; border:none; padding:12px 26px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; display:none; margin-right: 10px;">Take Winnings</button>
@@ -373,27 +367,23 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         </div>
         <script>
             let totalCells = 25;
-            let bombs = """
-        + str(num_bombs)
-        + """;
-            let bet = """
-        + str(bet_amount)
-        + """;
+            let bombs = {num_bombs};
+            let bet = {bet_amount};
             let bombPositions = [];
             let currentMultiplier = 1.0;
             let active = false;
 
-            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
-            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            function getCoins() {{ return parseInt(localStorage.getItem('arcade_coins') || '1000'); }}
+            function setCoins(val) {{ localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }}
 
-            function initGame() {
+            function initGame() {{
                 let coins = getCoins();
                 setCoins(coins);
-                if(coins < bet) {
+                if(coins < bet) {{
                     document.getElementById("statusMsg").innerHTML = "⚠️ Not enough coins!";
                     document.getElementById("statusMsg").style.color = "#ef4444";
                     return;
-                }
+                }}
                 setCoins(coins - bet);
                 bombPositions = [];
                 currentMultiplier = 1.0;
@@ -403,14 +393,14 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 document.getElementById("cashoutBtn").style.display = "none";
                 document.getElementById("restartBtn").style.display = "none";
                 
-                while(bombPositions.length < bombs) {
+                while(bombPositions.length < bombs) {{
                     let r = Math.floor(Math.random() * totalCells);
                     if(!bombPositions.includes(r)) bombPositions.push(r);
-                }
+                }}
                 
                 const grid = document.getElementById("grid");
                 grid.innerHTML = "";
-                for(let i=0; i<totalCells; i++) {
+                for(let i=0; i<totalCells; i++) {{
                     let b = document.createElement("button");
                     b.style.height = "60px";
                     b.style.background = "#1e293b";
@@ -421,15 +411,15 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                     b.style.color = "#fff";
                     b.onclick = () => reveal(i, b);
                     grid.appendChild(b);
-                }
-            }
+                }}
+            }}
 
-            function reveal(idx, btn) {
-                if(!active) { initGame(); return; }
+            function reveal(idx, btn) {{
+                if(!active) {{ initGame(); return; }}
                 if(btn.disabled) return;
                 btn.disabled = true;
                 
-                if(bombPositions.includes(idx)) {
+                if(bombPositions.includes(idx)) {{
                     btn.style.background = "#ef4444";
                     btn.innerHTML = "💣";
                     active = false;
@@ -438,28 +428,28 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                     document.getElementById("cashoutBtn").style.display = "none";
                     document.getElementById("restartBtn").style.display = "inline-block";
                     revealAllBombs();
-                } else {
+                }} else {{
                     btn.style.background = "#059669";
                     btn.innerHTML = "💎";
                     currentMultiplier = (currentMultiplier * 1.22).toFixed(2);
                     let currentWin = Math.floor(bet * currentMultiplier);
                     document.getElementById("cashoutBtn").style.display = "inline-block";
                     document.getElementById("cashoutBtn").innerText = "Cashout (" + currentWin + " Coins)";
-                }
-            }
+                }}
+            }}
 
-            function revealAllBombs() {
+            function revealAllBombs() {{
                 const buttons = document.getElementById("grid").children;
-                for(let i=0; i<buttons.length; i++) {
-                    if(bombPositions.includes(i)) {
+                for(let i=0; i<buttons.length; i++) {{
+                    if(bombPositions.includes(i)) {{
                         buttons[i].style.background = "#ef4444";
                         buttons[i].innerHTML = "💣";
-                    }
+                    }}
                     buttons[i].disabled = true;
-                }
-            }
+                }}
+            }}
 
-            function cashout() {
+            function cashout() {{
                 if(!active) return;
                 active = false;
                 let profit = Math.floor(bet * currentMultiplier);
@@ -471,13 +461,13 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 document.getElementById("cashoutBtn").style.display = "none";
                 document.getElementById("restartBtn").style.display = "inline-block";
                 revealAllBombs();
-            }
+            }}
 
-            function resetGame() { initGame(); }
+            function resetGame() {{ initGame(); }}
 
             setCoins(getCoins());
             const grid = document.getElementById("grid");
-            for(let i=0; i<totalCells; i++) {
+            for(let i=0; i<totalCells; i++) {{
                 let b = document.createElement("button");
                 b.style.height = "60px";
                 b.style.background = "#1e293b";
@@ -489,11 +479,10 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 b.innerHTML = "▶️";
                 b.onclick = () => initGame();
                 grid.appendChild(b);
-            }
+            }}
             document.getElementById("statusMsg").innerHTML = "Click any tile above to place bet & play!";
         </script>
         """
-    )
     st.components.v1.html(mines_html, height=540)
 
   elif gamble_game == "💥 TNT Crash Multiplier":
@@ -502,8 +491,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="cb"
     )
 
-    crash_html = (
-        """
+    crash_html = f"""
         <div style="text-align:center; background:linear-gradient(135deg, #090d16 0%, #171f33 100%); padding:30px; border-radius:16px; border:2px solid #f59e0b; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
                 <h3 style="color:#f59e0b; margin:0; font-size: 18px;">🧨 TNT CRASH</h3>
@@ -522,15 +510,13 @@ elif app_mode == "🎰 Gamble Station (High-End)":
             let timer = null;
             let crashPoint = (1.0 + Math.random() * 4.2).toFixed(2);
             let activeRun = false;
-            let bet = """
-        + str(bet_crash)
-        + """;
+            let bet = {bet_crash};
 
-            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
-            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            function getCoins() {{ return parseInt(localStorage.getItem('arcade_coins') || '1000'); }}
+            function setCoins(val) {{ localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }}
             setCoins(getCoins());
 
-            function resetCrash() {
+            function resetCrash() {{
                 mult = 1.00;
                 crashPoint = (1.0 + Math.random() * 4.2).toFixed(2);
                 activeRun = false;
@@ -540,25 +526,25 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 document.getElementById("outBtn").style.display = "none";
                 document.getElementById("crashResetBtn").style.display = "none";
                 document.getElementById("cMsg").innerText = "";
-            }
+            }}
 
-            function startCrash() {
+            function startCrash() {{
                 let coins = getCoins();
-                if(coins < bet) {
+                if(coins < bet) {{
                     document.getElementById("cMsg").innerText = "⚠️ Not enough coins!";
                     document.getElementById("cMsg").style.color = "#ef4444";
                     return;
-                }
+                }}
                 setCoins(coins - bet);
                 document.getElementById("startBtn").style.display = "none";
                 document.getElementById("outBtn").style.display = "inline-block";
                 document.getElementById("cMsg").innerText = "";
                 activeRun = true;
                 
-                timer = setInterval(() => {
+                timer = setInterval(() => {{
                     mult += 0.04;
                     document.getElementById("mult").innerText = mult.toFixed(2) + "x";
-                    if(mult >= crashPoint) {
+                    if(mult >= crashPoint) {{
                         clearInterval(timer);
                         activeRun = false;
                         document.getElementById("outBtn").style.display = "none";
@@ -567,11 +553,11 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                         document.getElementById("mult").innerText = "💥 CRASHED AT " + mult.toFixed(2) + "x";
                         document.getElementById("cMsg").innerText = "Lost " + bet + " coins!";
                         document.getElementById("cMsg").style.color = "#ef4444";
-                    }
-                }, 100);
-            }
+                    }}
+                }}, 100);
+            }}
 
-            function eject() {
+            function eject() {{
                 if(!activeRun) return;
                 clearInterval(timer);
                 activeRun = false;
@@ -581,10 +567,9 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 setCoins(getCoins() + win);
                 document.getElementById("cMsg").innerText = "🎉 Cashout Successful! Won " + win + " coins!";
                 document.getElementById("cMsg").style.color = "#10b981";
-            }
+            }}
         </script>
         """
-    )
     st.components.v1.html(crash_html, height=340)
 
   elif gamble_game == "🪙 Coinflip Dual (Animated)":
@@ -593,8 +578,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="cfb"
     )
 
-    coin_html = (
-        """
+    coin_html = f"""
         <div style="text-align:center; background:linear-gradient(135deg, #100f24 0%, #291d4e 100%); padding:30px; border-radius:16px; border:2px solid #8b5cf6; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
                 <h3 style="color:#c084fc; margin:0; font-size: 18px;">🪙 COINFLIP (1.95x)</h3>
@@ -615,20 +599,18 @@ elif app_mode == "🎰 Gamble Station (High-End)":
             <p id="cfMsg" style="color:#fff; font-weight:bold; margin:0; font-size: 15px;"></p>
         </div>
         <script>
-            let bet = """
-        + str(cf_bet)
-        + """;
-            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
-            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            let bet = {cf_bet};
+            function getCoins() {{ return parseInt(localStorage.getItem('arcade_coins') || '1000'); }}
+            function setCoins(val) {{ localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }}
             setCoins(getCoins());
 
-            function flip(choice) {
+            function flip(choice) {{
                 let coins = getCoins();
-                if(coins < bet) {
+                if(coins < bet) {{
                     document.getElementById("cfMsg").innerText = "⚠️ Not enough coins!";
                     document.getElementById("cfMsg").style.color = "#ef4444";
                     return;
-                }
+                }}
                 setCoins(coins - bet);
                 document.getElementById("cfMsg").innerText = " Flipping coin...";
                 document.getElementById("cfMsg").style.color = "#f59e0b";
@@ -640,21 +622,20 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 let extra = outcome === "HEADS" ? 0 : 180;
                 coin.style.transform = "rotateY(" + (turns + extra) + "deg)";
 
-                setTimeout(() => {
-                    if(choice === outcome) {
+                setTimeout(() => {{
+                    if(choice === outcome) {{
                         let win = Math.floor(bet * 1.95);
                         setCoins(getCoins() + win);
                         document.getElementById("cfMsg").innerText = "🎉 Result: " + outcome + "! You WON " + win + " coins!";
                         document.getElementById("cfMsg").style.color = "#10b981";
-                    } else {
+                    }} else {{
                         document.getElementById("cfMsg").innerText = "💥 Result: " + outcome + "! You LOST " + bet + " coins.";
                         document.getElementById("cfMsg").style.color = "#ef4444";
-                    }
-                }, 1500);
-            }
+                    }}
+                }}, 1500);
+            }}
         </script>
         """
-    )
     st.components.v1.html(coin_html, height=360)
 
   elif gamble_game == "🎲 Lucky Dice (Adjustable Roll-Over)":
@@ -717,7 +698,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                         document.getElementById("dMsg").innerText = "💥 Rolled " + finalRoll + " (<= " + target + ")! Lost " + bet + " coins.";
                         document.getElementById("dMsg").style.color = "#ef4444";
                     }}
-                }, 1200);
+                }}, 1200);
             }}
         </script>
         """
@@ -729,8 +710,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="pb"
     )
 
-    plinko_html = (
-        """
+    plinko_html = f"""
         <div style="text-align:center; background:linear-gradient(135deg, #022330 0%, #083344 100%); padding:20px; border-radius:16px; border:2px solid #06b6d4; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
                 <h3 style="color:#22d3ee; margin:0; font-size: 16px;">🔻 PLINKO ARENA</h3>
@@ -743,65 +723,63 @@ elif app_mode == "🎰 Gamble Station (High-End)":
             <p id="pMsg" style="color:#fff; font-weight:bold; margin-top:10px; font-size: 14px;"></p>
         </div>
         <script>
-            let bet = """
-        + str(plinko_bet)
-        + """;
-            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
-            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            let bet = {plinko_bet};
+            function getCoins() {{ return parseInt(localStorage.getItem('arcade_coins') || '1000'); }}
+            function setCoins(val) {{ localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }}
             setCoins(getCoins());
 
             const canvas = document.getElementById("plinkoCanvas");
             const ctx = canvas.getContext("2d");
             const multipliers = [0.2, 0.8, 1.5, 3.0, 10.0];
 
-            function drawBoard(ballX = -10, ballY = -10) {
+            function drawBoard(ballX = -10, ballY = -10) {{
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
                 // Draw Pins
                 ctx.fillStyle = "#38bdf8";
                 let rows = 5;
-                for(let r=0; r<rows; r++) {
+                for(let r=0; r<rows; r++) {{
                     let pinsInRow = r + 3;
                     let spacingX = 45;
                     let startX = (canvas.width - (pinsInRow - 1) * spacingX) / 2;
-                    for(let p=0; p<pinsInRow; p++) {
+                    for(let p=0; p<pinsInRow; p++) {{
                         let px = startX + p * spacingX;
                         let py = 35 + r * 32;
                         ctx.beginPath();
                         ctx.arc(px, py, 3.5, 0, Math.PI * 2);
                         ctx.fill();
-                    }
-                }
+                    }}
+                }}
 
                 // Draw Multiplier slots at bottom
                 let slotWidth = canvas.width / 5;
                 let colors = ["#ef4444", "#f59e0b", "#10b981", "#06b6d4", "#8b5cf6"];
-                for(let i=0; i<5; i++) {
+                for(let i=0; i<5; i++) {{
                     ctx.fillStyle = colors[i];
                     ctx.fillRect(i * slotWidth + 2, 225, slotWidth - 4, 30);
                     ctx.fillStyle = "#fff";
                     ctx.font = "bold 12px sans-serif";
                     ctx.textAlign = "center";
                     ctx.fillText(multipliers[i] + "x", i * slotWidth + slotWidth / 2, 245);
-                }
+                }}
 
                 // Draw Ball if active
-                if(ballX >= 0 && ballY >= 0) {
+                if(ballX >= 0 && ballY >= 0) {{
                     ctx.fillStyle = "#f59e0b";
                     ctx.beginPath();
                     ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            }
+                }}
+            }}
             drawBoard();
 
-            function dropPlinkoBall() {
+            function dropPlinkoBall() {{
                 let coins = getCoins();
-                if(coins < bet) {
+                if(coins < bet) {{
                     document.getElementById("pMsg").innerText = "⚠️ Not enough coins!";
                     document.getElementById("pMsg").style.color = "#ef4444";
                     return;
-                }
+                }}
                 setCoins(coins - bet);
                 document.getElementById("pMsg").innerText = "Ball dropping...";
                 document.getElementById("pMsg").style.color = "#22d3ee";
@@ -811,7 +789,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 let vx = (Math.random() - 0.5) * 4;
                 let vy = 2;
 
-                let anim = setInterval(() => {
+                let anim = setInterval(() => {{
                     by += vy;
                     bx += vx;
                     vy += 0.2;
@@ -820,7 +798,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
 
                     drawBoard(bx, by);
 
-                    if(by >= 215) {
+                    if(by >= 215) {{
                         clearInterval(anim);
                         let slotWidth = canvas.width / 5;
                         let slot = Math.floor(bx / slotWidth);
@@ -830,19 +808,18 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                         setCoins(getCoins() + win);
 
                         drawBoard();
-                        if(mult >= 1.0) {
+                        if(mult >= 1.0) {{
                             document.getElementById("pMsg").innerText = "🎯 Landed on " + mult + "x! Won " + win + " coins!";
                             document.getElementById("pMsg").style.color = "#10b981";
-                        } else {
+                        }} else {{
                             document.getElementById("pMsg").innerText = "💥 Landed on " + mult + "x. Returned " + win + " coins.";
                             document.getElementById("pMsg").style.color = "#ef4444";
-                        }
-                    }
-                }, 30);
-            }
+                        }}
+                    }}
+                }}, 30);
+            }}
         </script>
         """
-    )
     st.components.v1.html(plinko_html, height=440)
 
   elif gamble_game == "🎡 Wheel of Fortune (Jackpot Wheel)":
@@ -851,15 +828,13 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="wb"
     )
 
-    wheel_html = (
-        """
+    wheel_html = f"""
         <div style="text-align:center; background:linear-gradient(135deg, #3b0764 0%, #581c87 100%); padding:25px; border-radius:16px; border:2px solid #d946ef; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 10px;">
                 <h3 style="color:#e879f9; margin:0; font-size: 16px;">🎡 JACKPOT WHEEL</h3>
                 <span style="background:#111827; color:#f59e0b; padding:4px 10px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
             
-            <!-- Wheel Container with Visible Multiplier Legend -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 15px 0;">
                 <div style="position: relative; width: 130px; height: 130px;">
                     <div id="wheel" style="width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#ef4444 0deg 60deg, #f59e0b 60deg 120deg, #10b981 120deg 180deg, #06b6d4 180deg 240deg, #8b5cf6 240deg 300deg, #ec4899 300deg 360deg); border: 4px solid #fbcfe8; transition: transform 2.5s cubic-bezier(0.15, 0.85, 0.35, 1); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(217,70,239,0.5);">
@@ -867,7 +842,6 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                     </div>
                     <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 15px solid #fff;"></div>
                 </div>
-                <!-- Legend for Multipliers -->
                 <div style="text-align: left; font-size: 13px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 1px solid #701a75;">
                     <div style="color: #ef4444; font-weight: bold;">🟥 Red: 0x</div>
                     <div style="color: #f59e0b; font-weight: bold;">🟧 Orange: 0.5x</div>
@@ -882,22 +856,20 @@ elif app_mode == "🎰 Gamble Station (High-End)":
             <p id="wMsg" style="color:#fff; font-weight:bold; margin-top:12px; font-size: 14px;"></p>
         </div>
         <script>
-            let bet = """
-        + str(wheel_bet)
-        + """;
-            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
-            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            let bet = {wheel_bet};
+            function getCoins() {{ return parseInt(localStorage.getItem('arcade_coins') || '1000'); }}
+            function setCoins(val) {{ localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }}
             setCoins(getCoins());
 
             let currentRotation = 0;
 
-            function spinJackpot() {
+            function spinJackpot() {{
                 let coins = getCoins();
-                if(coins < bet) {
+                if(coins < bet) {{
                     document.getElementById("wMsg").innerText = "⚠️ Not enough coins!";
                     document.getElementById("wMsg").style.color = "#ef4444";
                     return;
-                }
+                }}
                 setCoins(coins - bet);
                 document.getElementById("wMsg").innerText = "Spinning wheel...";
                 document.getElementById("wMsg").style.color = "#e879f9";
@@ -909,34 +881,33 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 let rand = Math.random();
                 let cumulative = 0;
                 let chosenIdx = 0;
-                for(let i=0; i<weights.length; i++) {
+                for(let i=0; i<weights.length; i++) {{
                     cumulative += weights[i];
-                    if(rand <= cumulative) { chosenIdx = i; break; }
-                }
+                    if(rand <= cumulative) {{ chosenIdx = i; break; }}
+                }}
 
                 let targetAngle = 360 - segmentAngles[chosenIdx];
                 let spins = (Math.floor(Math.random() * 3) + 5) * 360;
                 currentRotation = spins + targetAngle;
                 wheel.style.transform = "rotate(" + currentRotation + "deg)";
 
-                setTimeout(() => {
+                setTimeout(() => {{
                     let multipliers = [0, 0.5, 1.0, 1.5, 3.0, 10.0];
                     let mult = multipliers[chosenIdx];
                     let win = Math.floor(bet * mult);
                     setCoins(getCoins() + win);
 
-                    if(mult >= 1.0) {
+                    if(mult >= 1.0) {{
                         document.getElementById("wMsg").innerText = "🎉 Jackpot! Hit " + mult + "x! Won " + win + " coins!";
                         document.getElementById("wMsg").style.color = "#10b981";
-                    } else {
+                    }} else {{
                         document.getElementById("wMsg").innerText = "💥 Hit " + mult + "x. Returned " + win + " coins.";
                         document.getElementById("wMsg").style.color = "#ef4444";
-                    }
-                }, 2500);
-            }
+                    }}
+                }}, 2500);
+            }}
         </script>
         """
-    )
     st.components.v1.html(wheel_html, height=430)
 
 elif app_mode == "✨ AI Game Creator & Vault":
