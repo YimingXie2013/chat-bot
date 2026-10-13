@@ -1,3 +1,4 @@
+import time
 import urllib.parse
 from groq import Groq
 import streamlit as st
@@ -26,9 +27,12 @@ if "messages" not in st.session_state:
 if "is_premium" not in st.session_state:
   st.session_state.is_premium = False
 
-# Virtual Balance for Gamble Station (100% Free Virtual Arcade Coins)
+# Virtual Balance & Cooldown for Gamble Station
 if "arcade_coins" not in st.session_state:
   st.session_state.arcade_coins = 1000
+
+if "last_bonus_time" not in st.session_state:
+  st.session_state.last_bonus_time = 0.0
 
 # Private User Game Vault initialization
 if "user_game_vault" not in st.session_state:
@@ -40,14 +44,26 @@ st.title("⚡ Llama AI Hub & Arcade")
 with st.sidebar:
   st.header("🎮 Navigation & Status")
 
-  # Virtual Wallet Display
+  # Virtual Wallet Display & Hourly Bonus Logic
   st.metric(
       label="🪙 Your Arcade Coins", value=f"{st.session_state.arcade_coins:,}"
   )
-  if st.button("🎁 Claim Daily Bonus (+500 Coins)"):
-    st.session_state.arcade_coins += 500
-    st.success("Claimed +500 Coins!")
-    st.rerun()
+
+  current_time = time.time()
+  cooldown_period = 3600  # 1 Hour in seconds
+  time_passed = current_time - st.session_state.last_bonus_time
+
+  if time_passed >= cooldown_period:
+    if st.button("🎁 Claim Hourly Bonus (+500 Coins)"):
+      st.session_state.arcade_coins += 500
+      st.session_state.last_bonus_time = current_time
+      st.success("Successfully claimed +500 Coins!")
+      st.rerun()
+  else:
+    remaining_mins = int((cooldown_period - time_passed) // 60)
+    st.info(
+        f"⏳ Next bonus available in approx. {remaining_mins} minute(s)."
+    )
 
   st.markdown("---")
 
@@ -280,11 +296,11 @@ if app_mode == "Arcade Games":
           ' target="_blank" style="background: #8b5cf6; color: white; padding:'
           ' 14px 28px; font-size: 18px; font-weight: bold; border-radius: 8px;'
           ' text-decoration: none; display: inline-block;">🚀 Launch Space'
-          ' Shooter</a>轻</div>',
+          ' Shooter</a></div>',
           unsafe_allow_html=True,
       )
 
-# NEW: GAMBLE STATION CATEGORY
+# GAMBLE STATION CATEGORY
 elif app_mode == "🎰 Gamble Station (Free Coins)":
   st.header("🎰 Arcade Gamble Station")
   st.caption(
@@ -320,12 +336,26 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
         "Number of Hidden Bombs:", min_value=1, max_value=10, value=3
     )
 
+    # Callback mechanism to handle backend coin transactions safely
+    col_w1, col_w2 = st.columns(2)
+    with col_w1:
+      if st.button("🔄 Reset / Deduct Initial Bet"):
+        if st.session_state.arcade_coins >= bet_amount:
+          st.session_state.arcade_coins -= bet_amount
+          st.success(f"Bet of {bet_amount} placed! Good luck!")
+          st.rerun()
+        else:
+          st.error("Not enough coins!")
+
     mines_html = f"""
         <div style="text-align:center; background:#111827; padding:20px; border-radius:12px; border:2px solid #10B981; font-family:sans-serif;">
             <h3 style="color:#10B981; margin-top:0;">Mines Arena</h3>
-            <p style="color:#A1A1AA;">Bet: {bet_amount} Coins | Bombs: {num_bombs}</p>
+            <p style="color:#A1A1AA;">Active Bet: {bet_amount} Coins | Bombs: {num_bombs}</p>
             <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:320px; margin:15px auto;"></div>
-            <button id="cashoutBtn" onclick="cashout()" style="background:#10B981; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">Take Winnings</button>
+            <div style="margin-top:12px;">
+                <button id="cashoutBtn" onclick="cashout()" style="background:#10B981; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none; margin-right: 10px;">Take Winnings</button>
+                <button id="restartBtn" onclick="resetGame()" style="background:#3B82F6; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">🔄 Play Again</button>
+            </div>
             <p id="statusMsg" style="color:#FFF; font-weight:bold; margin-top:10px;"></p>
         </div>
         <script>
@@ -337,23 +367,34 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
             let active = true;
             let revealed = 0;
 
-            while(bombPositions.length < bombs) {{
-                let r = Math.floor(Math.random() * totalCells);
-                if(!bombPositions.includes(r)) bombPositions.push(r);
-            }}
-
-            const grid = document.getElementById("grid");
-            for(let i=0; i<totalCells; i++) {{
-                let b = document.createElement("button");
-                b.style.height = "55px";
-                b.style.background = "#1F2937";
-                b.style.border = "2px solid #374151";
-                b.style.borderRadius = "8px";
-                b.style.fontSize = "20px";
-                b.style.cursor = "pointer";
-                b.style.color = "#FFF";
-                b.onclick = () => reveal(i, b);
-                grid.appendChild(b);
+            function initGame() {{
+                bombPositions = [];
+                currentMultiplier = 1.0;
+                active = true;
+                revealed = 0;
+                document.getElementById("statusMsginnerHTML = "";
+                document.getElementById("cashoutBtn").style.display = "none";
+                document.getElementById("restartBtn").style.display = "none";
+                
+                while(bombPositions.length < bombs) {{
+                    let r = Math.floor(Math.random() * totalCells);
+                    if(!bombPositions.includes(r)) bombPositions.push(r);
+                }}
+                
+                const grid = document.getElementById("grid");
+                grid.innerHTML = "";
+                for(let i=0; i<totalCells; i++) {{
+                    let b = document.createElement("button");
+                    b.style.height = "55px";
+                    b.style.background = "#1F2937";
+                    b.style.border = "2px solid #374151";
+                    b.style.borderRadius = "8px";
+                    b.style.fontSize = "20px";
+                    b.style.cursor = "pointer";
+                    b.style.color = "#FFF";
+                    b.onclick = () => reveal(i, b);
+                    grid.appendChild(b);
+                }}
             }}
 
             function reveal(idx, btn) {{
@@ -363,8 +404,11 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                     btn.style.background = "#EF4444";
                     btn.innerHTML = "💣";
                     active = false;
-                    document.getElementById("statusMsg").innerHTML = "💥 BOOM! You lost " + bet + " coins.";
+                    document.getElementById("statusMsg").innerHTML = "💥 BOOM! You hit a bomb.";
                     document.getElementById("statusMsg").style.color = "#EF4444";
+                    document.getElementById("cashoutBtn").style.display = "none";
+                    document.getElementById("restartBtn").style.display = "inline-block";
+                    revealAllBombs();
                 }} else {{
                     btn.style.background = "#059669";
                     btn.innerHTML = "💎";
@@ -375,16 +419,36 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 }}
             }}
 
+            function revealAllBombs() {{
+                const buttons = document.getElementById("grid").children;
+                for(let i=0; i<buttons.length; i++) {{
+                    if(bombPositions.includes(i)) {{
+                        buttons[i].style.background = "#EF4444";
+                        buttons[i].innerHTML = "💣";
+                    }}
+                    buttons[i].disabled = true;
+                }}
+            }}
+
             function cashout() {{
                 if(!active) return;
                 active = false;
                 let profit = Math.floor(bet * currentMultiplier);
                 document.getElementById("statusMsg").innerHTML = "🎉 CASHED OUT! Won " + profit + " coins (" + currentMultiplier + "x)!";
                 document.getElementById("statusMsg").style.color = "#10B981";
+                document.getElementById("cashoutBtn").style.display = "none";
+                document.getElementById("restartBtn").style.display = "inline-block";
+                revealAllBombs();
             }}
+
+            function resetGame() {{
+                initGame();
+            }}
+
+            initGame();
         </script>
         """
-    st.components.v1.html(mines_html, height=480)
+    st.components.v1.html(mines_html, height=500)
 
   elif gamble_game == "💥 TNT Crash Multiplier":
     st.subheader("💥 TNT Crash Multiplier")
@@ -402,8 +466,11 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
     crash_html = f"""
         <div style="text-align:center; background:#0F172A; padding:25px; border-radius:12px; border:2px solid #F59E0B; font-family:sans-serif;">
             <h2 id="mult" style="color:#F59E0B; font-size:48px; margin:10px 0;">1.00x</h2>
-            <button id="startBtn" onclick="startCrash()" style="background:#F59E0B; color:black; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer;">🚀 START RUN</button>
-            <button id="outBtn" onclick="eject()" style="background:#10B981; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">💰 CASH OUT</button>
+            <div>
+                <button id="startBtn" onclick="startCrash()" style="background:#F59E0B; color:black; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; margin-right:10px;">🚀 START RUN</button>
+                <button id="outBtn" onclick="eject()" style="background:#10B981; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none; margin-right:10px;">💰 CASH OUT</button>
+                <button id="crashResetBtn" onclick="resetCrash()" style="background:#3B82F6; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">🔄 Play Again</button>
+            </div>
             <p id="cMsg" style="color:#FFF; margin-top:15px; font-weight:bold;"></p>
         </div>
         <script>
@@ -412,6 +479,18 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
             let crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
             let activeRun = false;
             let bet = {bet_crash};
+
+            function resetCrash() {{
+                mult = 1.00;
+                crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
+                activeRun = false;
+                document.getElementById("mult").innerText = "1.00x";
+                document.getElementById("mult").style.color = "#F59E0B";
+                document.getElementById("startBtn").style.display = "inline-block";
+                document.getElementById("outBtn").style.display = "none";
+                document.getElementById("crashResetBtn").style.display = "none";
+                document.getElementById("cMsg").innerText = "";
+            }}
 
             function startCrash() {{
                 document.getElementById("startBtn").style.display = "none";
@@ -424,9 +503,10 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                         clearInterval(timer);
                         activeRun = false;
                         document.getElementById("outBtn").style.display = "none";
+                        document.getElementById("crashResetBtn").style.display = "inline-block";
                         document.getElementById("mult").style.color = "#EF4444";
                         document.getElementById("mult").innerText = "💥 CRASHED AT " + mult.toFixed(2) + "x";
-                        document.getElementById("cMsg").innerText = "You lost " + bet + " coins!";
+                        document.getElementById("cMsg").innerText = "Round crashed!";
                         document.getElementById("cMsg").style.color = "#EF4444";
                     }}
                 }}, 100);
@@ -437,13 +517,14 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 clearInterval(timer);
                 activeRun = false;
                 document.getElementById("outBtn").style.display = "none";
+                document.getElementById("crashResetBtn").style.display = "inline-block";
                 let win = Math.floor(bet * mult);
                 document.getElementById("cMsg").innerText = "🎉 Cashout Successful! You won " + win + " coins!";
                 document.getElementById("cMsg").style.color = "#10B981";
             }}
         </script>
         """
-    st.components.v1.html(crash_html, height=280)
+    st.components.v1.html(crash_html, height=300)
 
   elif gamble_game == "🪙 Coinflip Dual":
     st.subheader("🪙 Coinflip Dual")
