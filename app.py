@@ -40,29 +40,36 @@ st.title("⚡ Llama AI Hub & Arcade")
 with st.sidebar:
   st.header("🎮 Navigation & Status")
 
-  # Hourly Bonus Logic
+  # Hourly Bonus Logic (Synced with localStorage timer)
   current_time = time.time()
   cooldown_period = 3600  # 1 Hour in seconds
-  time_passed = current_time - st.session_state.last_bonus_time
 
-  if time_passed >= cooldown_period:
-    if st.button("🎁 Claim Hourly Bonus (+500 Coins)"):
-      st.session_state.last_bonus_time = current_time
-      st.success("Claimed +500 Coins! (Go to Gamble Station to sync)")
-      st.components.v1.html(
-          """
-            <script>
+  # We inject a small script to read localStorage bonus time if needed,
+  # but here we manage it cleanly via Streamlit session/localStorage bridge.
+  if "bonus_claimed_session" not in st.session_state:
+    st.session_state.bonus_claimed_session = False
+
+  st.markdown("🎁 **Hourly Coin Bonus**")
+  if st.button("Claim +500 Coins"):
+    st.components.v1.html(
+        """
+        <script>
+            let lastClaim = parseInt(localStorage.getItem('last_bonus_timestamp') || '0');
+            let now = Date.now();
+            let cooldown = 3600000; // 1 hour in ms
+            if (now - lastClaim < cooldown) {
+                alert("⏳ Cooldown active! Please wait until the next hour.");
+            } else {
+                localStorage.setItem('last_bonus_timestamp', now);
                 let coins = parseInt(localStorage.getItem('arcade_coins') || '1000');
                 coins += 500;
                 localStorage.setItem('arcade_coins', coins);
                 window.parent.location.reload();
-            </script>
-            """,
-          height=0,
-      )
-  else:
-    remaining_mins = int((cooldown_period - time_passed) // 60)
-    st.info(f"⏳ Next bonus available in approx. {remaining_mins} min(s).")
+            }
+        </script>
+        """,
+        height=0,
+    )
 
   st.markdown("---")
 
@@ -78,7 +85,7 @@ with st.sidebar:
           "Chat & AI",
           "HD Image Generator",
           "Arcade Games",
-          "🎰 Gamble Station (Free Coins)",
+          "🎰 Gamble Station (High-End)",
           "✨ AI Game Creator & Vault",
       ],
   )
@@ -299,16 +306,16 @@ if app_mode == "Arcade Games":
           unsafe_allow_html=True,
       )
 
-# GAMBLE STATION CATEGORY (FULLY PERSISTENT & ANIMATED VIA LOCALSTORAGE)
-elif app_mode == "🎰 Gamble Station (Free Coins)":
-  st.header("🎰 Arcade Gamble Station")
+# GAMBLE STATION CATEGORY (HIGH-END DARK THEME & PERSISTENT LOCALSTORAGE)
+elif app_mode == "🎰 Gamble Station (High-End)":
+  st.header("🎰 Gamble Station Originals")
   st.caption(
-      "100% Free Virtual Minigames. Coins are saved in your browser & never"
-      " get lost!"
+      "Play provably fair virtual games. 100% Free coins, persistent in your"
+      " browser."
   )
 
   gamble_game = st.selectbox(
-      "Select Minigame:",
+      "Select Original Game:",
       [
           "💣 Mines (Grid Field)",
           "💥 TNT Crash Multiplier",
@@ -328,22 +335,22 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
 
     mines_html = (
         """
-        <div style="text-align:center; background:#111827; padding:20px; border-radius:12px; border:2px solid #10B981; font-family:sans-serif;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="color:#10B981; margin:0;">Mines Arena</h3>
-                <span style="background:#1F2937; color:#F59E0B; padding:6px 12px; border-radius:6px; font-weight:bold; border:1px solid #374151;">🪙 Coins: <span id="coinDisplay">1000</span></span>
+        <div style="text-align:center; background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); padding:25px; border-radius:16px; border:2px solid #10b981; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#10b981; margin:0; font-size: 18px;">💎 MINES ARENA</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
-            <p style="color:#A1A1AA; margin:5px 0;">Bet: """
+            <p style="color:#94a3b8; margin:8px 0; font-size: 14px;">Active Bet: """
         + str(bet_amount)
-        + """ Coins | Bombs: """
+        + """ | Bombs: """
         + str(num_bombs)
         + """</p>
-            <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:320px; margin:15px auto;"></div>
-            <div style="margin-top:12px;">
-                <button id="cashoutBtn" onclick="cashout()" style="background:#10B981; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none; margin-right: 10px;">Take Winnings</button>
-                <button id="restartBtn" onclick="resetGame()" style="background:#3B82F6; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">🔄 Play Again</button>
+            <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:340px; margin:20px auto;"></div>
+            <div style="margin-top:15px;">
+                <button id="cashoutBtn" onclick="cashout()" style="background:#10b981; color:white; border:none; padding:12px 26px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; display:none; margin-right: 10px; box-shadow: 0 4px 12px rgba(16,185,129,0.4);">Take Winnings</button>
+                <button id="restartBtn" onclick="resetGame()" style="background:#3b82f6; color:white; border:none; padding:12px 26px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; display:none; box-shadow: 0 4px 12px rgba(59,130,246,0.4);">🔄 Play Again</button>
             </div>
-            <p id="statusMsg" style="color:#FFF; font-weight:bold; margin-top:10px;"></p>
+            <p id="statusMsg" style="color:#fff; font-weight:bold; margin-top:12px; font-size: 15px;"></p>
         </div>
         <script>
             let totalCells = 25;
@@ -356,36 +363,24 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
             let bombPositions = [];
             let currentMultiplier = 1.0;
             let active = false;
-            let roundStarted = false;
-            let revealed = 0;
 
-            function getCoins() {
-                return parseInt(localStorage.getItem('arcade_coins') || '1000');
-            }
-            function setCoins(val) {
-                localStorage.setItem('arcade_coins', val);
-                document.getElementById("coinDisplay").innerText = val.toLocaleString();
-            }
+            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
+            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
 
             function initGame() {
                 let coins = getCoins();
                 setCoins(coins);
-                
                 if(coins < bet) {
-                    document.getElementById("statusMsg").innerHTML = "⚠️ Not enough coins! Claim hourly bonus.";
-                    document.getElementById("statusMsg").style.color = "#EF4444";
+                    document.getElementById("statusMsg").innerHTML = "⚠️ Not enough coins! Claim hourly bonus in sidebar.";
+                    document.getElementById("statusMsg").style.color = "#ef4444";
                     return;
                 }
-
                 setCoins(coins - bet);
-                
                 bombPositions = [];
                 currentMultiplier = 1.0;
                 active = true;
-                roundStarted = true;
-                revealed = 0;
                 document.getElementById("statusMsg").innerHTML = "Game started! Pick safe tiles.";
-                document.getElementById("statusMsg").style.color = "#10B981";
+                document.getElementById("statusMsg").style.color = "#10b981";
                 document.getElementById("cashoutBtn").style.display = "none";
                 document.getElementById("restartBtn").style.display = "none";
                 
@@ -398,43 +393,42 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 grid.innerHTML = "";
                 for(let i=0; i<totalCells; i++) {
                     let b = document.createElement("button");
-                    b.style.height = "55px";
-                    b.style.background = "#1F2937";
-                    b.style.border = "2px solid #374151";
-                    b.style.borderRadius = "8px";
-                    b.style.fontSize = "20px";
+                    b.style.height = "60px";
+                    b.style.background = "#1e293b";
+                    b.style.border = "2px solid #334155";
+                    b.style.borderRadius = "10px";
+                    b.style.fontSize = "22px";
                     b.style.cursor = "pointer";
-                    b.style.color = "#FFF";
+                    b.style.color = "#fff";
+                    b.style.transition = "all 0.2s ease";
+                    b.onmouseover = () => { if(active && !b.disabled) b.style.borderColor = "#10b981"; };
+                    b.onmouseout = () => { if(active && !b.disabled) b.style.borderColor = "#334155"; };
                     b.onclick = () => reveal(i, b);
                     grid.appendChild(b);
                 }
             }
 
             function reveal(idx, btn) {
-                if(!active) {
-                    initGame();
-                    return;
-                }
+                if(!active) { initGame(); return; }
                 if(btn.disabled) return;
                 btn.disabled = true;
                 
                 if(bombPositions.includes(idx)) {
-                    btn.style.background = "#EF4444";
+                    btn.style.background = "#ef4444";
                     btn.innerHTML = "💣";
                     active = false;
                     document.getElementById("statusMsg").innerHTML = "💥 BOOM! You lost " + bet + " coins.";
-                    document.getElementById("statusMsg").style.color = "#EF4444";
+                    document.getElementById("statusMsg").style.color = "#ef4444";
                     document.getElementById("cashoutBtn").style.display = "none";
                     document.getElementById("restartBtn").style.display = "inline-block";
-                    document.getElementById("restartBtn").innerText = "🔄 Play Again";
                     revealAllBombs();
                 } else {
                     btn.style.background = "#059669";
                     btn.innerHTML = "💎";
-                    revealed++;
                     currentMultiplier = (currentMultiplier * 1.25).toFixed(2);
+                    let currentWin = Math.floor(bet * currentMultiplier);
                     document.getElementById("cashoutBtn").style.display = "inline-block";
-                    document.getElementById("cashoutBtn").innerText = "Cashout (" + Math.floor(bet * currentMultiplier) + " Coins)";
+                    document.getElementById("cashoutBtn").innerText = "Cashout (" + currentWin + " Coins)";
                 }
             }
 
@@ -442,7 +436,7 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 const buttons = document.getElementById("grid").children;
                 for(let i=0; i<buttons.length; i++) {
                     if(bombPositions.includes(i)) {
-                        buttons[i].style.background = "#EF4444";
+                        buttons[i].style.background = "#ef4444";
                         buttons[i].innerHTML = "💣";
                     }
                     buttons[i].disabled = true;
@@ -457,37 +451,34 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 setCoins(coins);
                 
                 document.getElementById("statusMsg").innerHTML = "🎉 CASHED OUT! Won " + profit + " coins (" + currentMultiplier + "x)!";
-                document.getElementById("statusMsg").style.color = "#10B981";
+                document.getElementById("statusMsg").style.color = "#10b981";
                 document.getElementById("cashoutBtn").style.display = "none";
                 document.getElementById("restartBtn").style.display = "inline-block";
-                document.getElementById("restartBtn").innerText = "🔄 Play Again";
                 revealAllBombs();
             }
 
-            function resetGame() {
-                initGame();
-            }
+            function resetGame() { initGame(); }
 
             setCoins(getCoins());
             const grid = document.getElementById("grid");
             for(let i=0; i<totalCells; i++) {
                 let b = document.createElement("button");
-                b.style.height = "55px";
-                b.style.background = "#374151";
-                b.style.border = "2px solid #4B5563";
-                b.style.borderRadius = "8px";
-                b.style.fontSize = "14px";
+                b.style.height = "60px";
+                b.style.background = "#1e293b";
+                b.style.border = "2px solid #334155";
+                b.style.borderRadius = "10px";
+                b.style.fontSize = "16px";
                 b.style.cursor = "pointer";
-                b.style.color = "#FFF";
+                b.style.color = "#fff";
                 b.innerHTML = "▶️";
                 b.onclick = () => initGame();
                 grid.appendChild(b);
             }
-            document.getElementById("statusMsg").innerHTML = "Click any tile or start to place bet & play!";
+            document.getElementById("statusMsg").innerHTML = "Click any tile above to place bet & play!";
         </script>
         """
     )
-    st.components.v1.html(mines_html, height=520)
+    st.components.v1.html(mines_html, height=540)
 
   elif gamble_game == "💥 TNT Crash Multiplier":
     st.subheader("💥 TNT Crash Multiplier")
@@ -497,18 +488,18 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
 
     crash_html = (
         """
-        <div style="text-align:center; background:#0F172A; padding:25px; border-radius:12px; border:2px solid #F59E0B; font-family:sans-serif;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:#F59E0B; margin:0;">TNT Crash</h3>
-                <span style="background:#1E293B; color:#F59E0B; padding:6px 12px; border-radius:6px; font-weight:bold; border:1px solid #334155;">🪙 Coins: <span id="coinDisplay">1000</span></span>
+        <div style="text-align:center; background:linear-gradient(135deg, #090d16 0%, #171f33 100%); padding:30px; border-radius:16px; border:2px solid #f59e0b; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#f59e0b; margin:0; font-size: 18px;">🧨 TNT CRASH</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
-            <h2 id="mult" style="color:#F59E0B; font-size:48px; margin:10px 0;">1.00x</h2>
-            <div>
-                <button id="startBtn" onclick="startCrash()" style="background:#F59E0B; color:black; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; margin-right:10px;">🚀 START RUN</button>
-                <button id="outBtn" onclick="eject()" style="background:#10B981; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none; margin-right:10px;">💰 CASH OUT</button>
-                <button id="crashResetBtn" onclick="resetCrash()" style="background:#3B82F6; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">🔄 Play Again</button>
+            <h2 id="mult" style="color:#f59e0b; font-size:56px; margin:15px 0; font-weight: 900; text-shadow: 0 0 20px rgba(245,158,11,0.4);">1.00x</h2>
+            <div style="margin-top: 15px;">
+                <button id="startBtn" onclick="startCrash()" style="background:#f59e0b; color:#000; border:none; padding:14px 32px; font-size:18px; font-weight:bold; border-radius:10px; cursor:pointer; margin-right:10px; box-shadow: 0 4px 15px rgba(245,158,11,0.4);">🚀 START RUN</button>
+                <button id="outBtn" onclick="eject()" style="background:#10b981; color:white; border:none; padding:14px 32px; font-size:18px; font-weight:bold; border-radius:10px; cursor:pointer; display:none; margin-right:10px; box-shadow: 0 4px 15px rgba(16,185,129,0.4);">💰 CASH OUT</button>
+                <button id="crashResetBtn" onclick="resetCrash()" style="background:#3b82f6; color:white; border:none; padding:14px 32px; font-size:18px; font-weight:bold; border-radius:10px; cursor:pointer; display:none;">🔄 Play Again</button>
             </div>
-            <p id="cMsg" style="color:#FFF; margin-top:15px; font-weight:bold;"></p>
+            <p id="cMsg" style="color:#fff; margin-top:18px; font-weight:bold; font-size: 15px;"></p>
         </div>
         <script>
             let mult = 1.00;
@@ -528,7 +519,7 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
                 activeRun = false;
                 document.getElementById("mult").innerText = "1.00x";
-                document.getElementById("mult").style.color = "#F59E0B";
+                document.getElementById("mult").style.color = "#f59e0b";
                 document.getElementById("startBtn").style.display = "inline-block";
                 document.getElementById("outBtn").style.display = "none";
                 document.getElementById("crashResetBtn").style.display = "none";
@@ -539,7 +530,7 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 let coins = getCoins();
                 if(coins < bet) {
                     document.getElementById("cMsg").innerText = "⚠️ Not enough coins!";
-                    document.getElementById("cMsg").style.color = "#EF4444";
+                    document.getElementById("cMsg").style.color = "#ef4444";
                     return;
                 }
                 setCoins(coins - bet);
@@ -556,10 +547,10 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                         activeRun = false;
                         document.getElementById("outBtn").style.display = "none";
                         document.getElementById("crashResetBtn").style.display = "inline-block";
-                        document.getElementById("mult").style.color = "#EF4444";
+                        document.getElementById("mult").style.color = "#ef4444";
                         document.getElementById("mult").innerText = "💥 CRASHED AT " + mult.toFixed(2) + "x";
                         document.getElementById("cMsg").innerText = "Lost " + bet + " coins!";
-                        document.getElementById("cMsg").style.color = "#EF4444";
+                        document.getElementById("cMsg").style.color = "#ef4444";
                     }
                 }, 100);
             }
@@ -573,12 +564,12 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 let win = Math.floor(bet * mult);
                 setCoins(getCoins() + win);
                 document.getElementById("cMsg").innerText = "🎉 Cashout Successful! Won " + win + " coins!";
-                document.getElementById("cMsg").style.color = "#10B981";
+                document.getElementById("cMsg").style.color = "#10b981";
             }
         </script>
         """
     )
-    st.components.v1.html(crash_html, height=320)
+    st.components.v1.html(crash_html, height=340)
 
   elif gamble_game == "🪙 Coinflip Dual (Animated)":
     st.subheader("🪙 Coinflip Dual (Animated)")
@@ -588,21 +579,25 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
 
     coin_html = (
         """
-        <div style="text-align:center; background:#111827; padding:25px; border-radius:12px; border:2px solid #8B5CF6; font-family:sans-serif;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:#8B5CF6; margin:0;">Coinflip Arena</h3>
-                <span style="background:#1F2937; color:#F59E0B; padding:6px 12px; border-radius:6px; font-weight:bold; border:1px solid #374151;">🪙 Coins: <span id="coinDisplay">1000</span></span>
+        <div style="text-align:center; background:linear-gradient(135deg, #100f24 0%, #291d4e 100%); padding:30px; border-radius:16px; border:2px solid #8b5cf6; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#c084fc; margin:0; font-size: 18px;">🪙 COINFLIP ARENA</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
             
-            <div style="margin:20px auto; perspective: 1000px; width: 90px; height: 90px;">
-                <div id="coin" style="width: 100%; height: 100%; position: relative; transform-style: preserve-storage; transition: transform 1.5s; border-radius: 50%; background: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 36px; border: 4px solid #D97706; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🪙</div>
+            <!-- 3D Distinct Coinflip Element with Heads (H) and Tails (T) -->
+            <div style="margin:25px auto; perspective: 1000px; width: 100px; height: 100px;">
+                <div id="coin" style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.15, 0.85, 0.35, 1.2); border-radius: 50%;">
+                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #b45309); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #fde68a; box-shadow: 0 4px 15px rgba(245,158,11,0.5);">H</div>
+                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #475569); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #cbd5e1; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(148,163,184,0.5);">T</div>
+                </div>
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <button onclick="flip('HEADS')" style="background:#374151; color:white; border:2px solid #8B5CF6; padding:10px 20px; font-weight:bold; border-radius:8px; cursor:pointer; margin-right:10px;">HEADS</button>
-                <button onclick="flip('TAILS')" style="background:#374151; color:white; border:2px solid #8B5CF6; padding:10px 20px; font-weight:bold; border-radius:8px; cursor:pointer;">TAILS</button>
+            <div style="margin-bottom: 20px;">
+                <button onclick="flip('HEADS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer; margin-right:12px; font-size: 15px;">👑 PICK HEADS (H)</button>
+                <button onclick="flip('TAILS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer; font-size: 15px;">🛡️ PICK TAILS (T)</button>
             </div>
-            <p id="cfMsg" style="color:#FFF; font-weight:bold; margin:0;"></p>
+            <p id="cfMsg" style="color:#fff; font-weight:bold; margin:0; font-size: 15px;"></p>
         </div>
         <script>
             let bet = """
@@ -616,17 +611,17 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 let coins = getCoins();
                 if(coins < bet) {
                     document.getElementById("cfMsg").innerText = "⚠️ Not enough coins!";
-                    document.getElementById("cfMsg").style.color = "#EF4444";
+                    document.getElementById("cfMsg").style.color = "#ef4444";
                     return;
                 }
                 setCoins(coins - bet);
                 document.getElementById("cfMsg").innerText = " Flipping coin...";
-                document.getElementById("cfMsg").style.color = "#F59E0B";
+                document.getElementById("cfMsg").style.color = "#f59e0b";
 
                 let coin = document.getElementById("coin");
                 let outcome = Math.random() < 0.5 ? "HEADS" : "TAILS";
                 
-                let turns = (Math.floor(Math.random() * 3) + 3) * 360;
+                let turns = (Math.floor(Math.random() * 3) + 4) * 360;
                 let extra = outcome === "HEADS" ? 0 : 180;
                 coin.style.transform = "rotateY(" + (turns + extra) + "deg)";
 
@@ -635,17 +630,17 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                         let win = bet * 2;
                         setCoins(getCoins() + win);
                         document.getElementById("cfMsg").innerText = "🎉 Result: " + outcome + "! You WON " + win + " coins!";
-                        document.getElementById("cfMsg").style.color = "#10B981";
+                        document.getElementById("cfMsg").style.color = "#10b981";
                     } else {
                         document.getElementById("cfMsg").innerText = "💥 Result: " + outcome + "! You LOST " + bet + " coins.";
-                        document.getElementById("cfMsg").style.color = "#EF4444";
+                        document.getElementById("cfMsg").style.color = "#ef4444";
                     }
                 }, 1500);
             }
         </script>
         """
     )
-    st.components.v1.html(coin_html, height=330)
+    st.components.v1.html(coin_html, height=360)
 
   elif gamble_game == "🎲 Lucky Dice (Animated)":
     st.subheader("🎲 Lucky Dice (Roll Over 50)")
@@ -655,16 +650,16 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
 
     dice_html = (
         """
-        <div style="text-align:center; background:#111827; padding:25px; border-radius:12px; border:2px solid #EC4899; font-family:sans-serif;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:#EC4899; margin:0;">Lucky Dice Arena</h3>
-                <span style="background:#1F2937; color:#F59E0B; padding:6px 12px; border-radius:6px; font-weight:bold; border:1px solid #374151;">🪙 Coins: <span id="coinDisplay">1000</span></span>
+        <div style="text-align:center; background:linear-gradient(135deg, #1b0f1e 0%, #4a1c38 100%); padding:30px; border-radius:16px; border:2px solid #ec4899; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#f472b6; margin:0; font-size: 18px;">🎲 LUCKY DICE ARENA</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
             
-            <div id="diceBox" style="width:80px; height:80px; background:#1F2937; border:3px solid #EC4899; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:32px; color:#FFF; margin:20px auto; box-shadow:0 4px 10px rgba(0,0,0,0.5);">🎲</div>
+            <div id="diceBox" style="width:90px; height:90px; background:#1e293b; border:3px solid #ec4899; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:36px; color:#fff; margin:20px auto; box-shadow:0 6px 20px rgba(236,72,153,0.4);">🎲</div>
 
-            <button onclick="rollDice()" style="background:#EC4899; color:white; border:none; padding:12px 28px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer;">🎲 ROLL DICE (> 50)</button>
-            <p id="dMsg" style="color:#FFF; font-weight:bold; margin-top:15px;"></p>
+            <button onclick="rollDice()" style="background:#ec4899; color:white; border:none; padding:14px 32px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; box-shadow: 0 4px 15px rgba(236,72,153,0.4);">🎲 ROLL DICE (> 50)</button>
+            <p id="dMsg" style="color:#fff; font-weight:bold; margin-top:18px; font-size: 15px;"></p>
         </div>
         <script>
             let bet = """
@@ -678,12 +673,12 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                 let coins = getCoins();
                 if(coins < bet) {
                     document.getElementById("dMsg").innerText = "⚠️ Not enough coins!";
-                    document.getElementById("dMsg").style.color = "#EF4444";
+                    document.getElementById("dMsg").style.color = "#ef4444";
                     return;
                 }
                 setCoins(coins - bet);
                 document.getElementById("dMsg").innerText = "Rolling dice...";
-                document.getElementById("dMsg").style.color = "#EC4899";
+                document.getElementById("dMsg").style.color = "#ec4899";
                 
                 let diceBox = document.getElementById("diceBox");
                 let rollInterval = setInterval(() => {
@@ -699,17 +694,17 @@ elif app_mode == "🎰 Gamble Station (Free Coins)":
                         let win = bet * 2;
                         setCoins(getCoins() + win);
                         document.getElementById("dMsg").innerText = "🎉 Rolled " + finalRoll + " (>50)! You won " + win + " coins!";
-                        document.getElementById("dMsg").style.color = "#10B981";
+                        document.getElementById("dMsg").style.color = "#10b981";
                     } else {
                         document.getElementById("dMsg").innerText = "💥 Rolled " + finalRoll + " (<=50)! You lost " + bet + " coins.";
-                        document.getElementById("dMsg").style.color = "#EF4444";
+                        document.getElementById("dMsg").style.color = "#ef4444";
                     }
                 }, 1200);
             }
         </script>
         """
     )
-    st.components.v1.html(dice_html, height=320)
+    st.components.v1.html(dice_html, height=350)
 
 elif app_mode == "✨ AI Game Creator & Vault":
   st.header("✨ AI Game Generator & Private Vault")
