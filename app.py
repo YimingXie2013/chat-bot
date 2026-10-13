@@ -26,7 +26,11 @@ if "messages" not in st.session_state:
 if "is_premium" not in st.session_state:
   st.session_state.is_premium = False
 
-# Private User Game Vault initialization (isolated per session/user)
+# Virtual Balance for Gamble Station (100% Free Virtual Arcade Coins)
+if "arcade_coins" not in st.session_state:
+  st.session_state.arcade_coins = 1000
+
+# Private User Game Vault initialization
 if "user_game_vault" not in st.session_state:
   st.session_state.user_game_vault = []
 
@@ -35,6 +39,17 @@ st.title("⚡ Llama AI Hub & Arcade")
 # Sidebar Navigation & Settings
 with st.sidebar:
   st.header("🎮 Navigation & Status")
+
+  # Virtual Wallet Display
+  st.metric(
+      label="🪙 Your Arcade Coins", value=f"{st.session_state.arcade_coins:,}"
+  )
+  if st.button("🎁 Claim Daily Bonus (+500 Coins)"):
+    st.session_state.arcade_coins += 500
+    st.success("Claimed +500 Coins!")
+    st.rerun()
+
+  st.markdown("---")
 
   # Premium Badge Status
   if st.session_state.is_premium:
@@ -48,6 +63,7 @@ with st.sidebar:
           "Chat & AI",
           "HD Image Generator",
           "Arcade Games",
+          "🎰 Gamble Station (Free Coins)",
           "✨ AI Game Creator & Vault",
       ],
   )
@@ -264,44 +280,250 @@ if app_mode == "Arcade Games":
           ' target="_blank" style="background: #8b5cf6; color: white; padding:'
           ' 14px 28px; font-size: 18px; font-weight: bold; border-radius: 8px;'
           ' text-decoration: none; display: inline-block;">🚀 Launch Space'
-          ' Shooter</a></div>',
+          ' Shooter</a>轻</div>',
           unsafe_allow_html=True,
       )
+
+# NEW: GAMBLE STATION CATEGORY
+elif app_mode == "🎰 Gamble Station (Free Coins)":
+  st.header("🎰 Arcade Gamble Station")
+  st.caption(
+      "100% Free Virtual Minigames. No real money required. Play for highscores!"
+  )
+
+  gamble_game = st.selectbox(
+      "Select Minigame:",
+      [
+          "💣 Mines (Grid Field)",
+          "💥 TNT Crash Multiplier",
+          "🪙 Coinflip Dual",
+          "🎲 Lucky Dice",
+      ],
+  )
+
+  st.markdown(
+      f"**Current Balance:** 🪙 `{st.session_state.arcade_coins:,}` Arcade Coins"
+  )
+
+  if gamble_game == "💣 Mines (Grid Field)":
+    st.subheader("💣 Mines Field")
+    bet_amount = st.number_input(
+        "Bet Amount:",
+        min_value=10,
+        max_value=st.session_state.arcade_coins
+        if st.session_state.arcade_coins > 0
+        else 10,
+        value=50,
+        step=10,
+    )
+    num_bombs = st.slider(
+        "Number of Hidden Bombs:", min_value=1, max_value=10, value=3
+    )
+
+    mines_html = f"""
+        <div style="text-align:center; background:#111827; padding:20px; border-radius:12px; border:2px solid #10B981; font-family:sans-serif;">
+            <h3 style="color:#10B981; margin-top:0;">Mines Arena</h3>
+            <p style="color:#A1A1AA;">Bet: {bet_amount} Coins | Bombs: {num_bombs}</p>
+            <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:320px; margin:15px auto;"></div>
+            <button id="cashoutBtn" onclick="cashout()" style="background:#10B981; color:white; border:none; padding:12px 24px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">Take Winnings</button>
+            <p id="statusMsg" style="color:#FFF; font-weight:bold; margin-top:10px;"></p>
+        </div>
+        <script>
+            let totalCells = 25;
+            let bombs = {num_bombs};
+            let bet = {bet_amount};
+            let bombPositions = [];
+            let currentMultiplier = 1.0;
+            let active = true;
+            let revealed = 0;
+
+            while(bombPositions.length < bombs) {{
+                let r = Math.floor(Math.random() * totalCells);
+                if(!bombPositions.includes(r)) bombPositions.push(r);
+            }}
+
+            const grid = document.getElementById("grid");
+            for(let i=0; i<totalCells; i++) {{
+                let b = document.createElement("button");
+                b.style.height = "55px";
+                b.style.background = "#1F2937";
+                b.style.border = "2px solid #374151";
+                b.style.borderRadius = "8px";
+                b.style.fontSize = "20px";
+                b.style.cursor = "pointer";
+                b.style.color = "#FFF";
+                b.onclick = () => reveal(i, b);
+                grid.appendChild(b);
+            }}
+
+            function reveal(idx, btn) {{
+                if(!active || btn.disabled) return;
+                btn.disabled = true;
+                if(bombPositions.includes(idx)) {{
+                    btn.style.background = "#EF4444";
+                    btn.innerHTML = "💣";
+                    active = false;
+                    document.getElementById("statusMsg").innerHTML = "💥 BOOM! You lost " + bet + " coins.";
+                    document.getElementById("statusMsg").style.color = "#EF4444";
+                }} else {{
+                    btn.style.background = "#059669";
+                    btn.innerHTML = "💎";
+                    revealed++;
+                    currentMultiplier = (currentMultiplier * 1.25).toFixed(2);
+                    document.getElementById("cashoutBtn").style.display = "inline-block";
+                    document.getElementById("cashoutBtn").innerText = "Cashout (" + Math.floor(bet * currentMultiplier) + " Coins)";
+                }}
+            }}
+
+            function cashout() {{
+                if(!active) return;
+                active = false;
+                let profit = Math.floor(bet * currentMultiplier);
+                document.getElementById("statusMsg").innerHTML = "🎉 CASHED OUT! Won " + profit + " coins (" + currentMultiplier + "x)!";
+                document.getElementById("statusMsg").style.color = "#10B981";
+            }}
+        </script>
+        """
+    st.components.v1.html(mines_html, height=480)
+
+  elif gamble_game == "💥 TNT Crash Multiplier":
+    st.subheader("💥 TNT Crash Multiplier")
+    bet_crash = st.number_input(
+        "Bet Amount:",
+        min_value=10,
+        max_value=st.session_state.arcade_coins
+        if st.session_state.arcade_coins > 0
+        else 10,
+        value=50,
+        step=10,
+        key="crash_bet",
+    )
+
+    crash_html = f"""
+        <div style="text-align:center; background:#0F172A; padding:25px; border-radius:12px; border:2px solid #F59E0B; font-family:sans-serif;">
+            <h2 id="mult" style="color:#F59E0B; font-size:48px; margin:10px 0;">1.00x</h2>
+            <button id="startBtn" onclick="startCrash()" style="background:#F59E0B; color:black; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer;">🚀 START RUN</button>
+            <button id="outBtn" onclick="eject()" style="background:#10B981; color:white; border:none; padding:12px 28px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; display:none;">💰 CASH OUT</button>
+            <p id="cMsg" style="color:#FFF; margin-top:15px; font-weight:bold;"></p>
+        </div>
+        <script>
+            let mult = 1.00;
+            let timer = null;
+            let crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
+            let activeRun = false;
+            let bet = {bet_crash};
+
+            function startCrash() {{
+                document.getElementById("startBtn").style.display = "none";
+                document.getElementById("outBtn").style.display = "inline-block";
+                activeRun = true;
+                timer = setInterval(() => {{
+                    mult += 0.04;
+                    document.getElementById("mult").innerText = mult.toFixed(2) + "x";
+                    if(mult >= crashPoint) {{
+                        clearInterval(timer);
+                        activeRun = false;
+                        document.getElementById("outBtn").style.display = "none";
+                        document.getElementById("mult").style.color = "#EF4444";
+                        document.getElementById("mult").innerText = "💥 CRASHED AT " + mult.toFixed(2) + "x";
+                        document.getElementById("cMsg").innerText = "You lost " + bet + " coins!";
+                        document.getElementById("cMsg").style.color = "#EF4444";
+                    }}
+                }}, 100);
+            }}
+
+            function eject() {{
+                if(!activeRun) return;
+                clearInterval(timer);
+                activeRun = false;
+                document.getElementById("outBtn").style.display = "none";
+                let win = Math.floor(bet * mult);
+                document.getElementById("cMsg").innerText = "🎉 Cashout Successful! You won " + win + " coins!";
+                document.getElementById("cMsg").style.color = "#10B981";
+            }}
+        </script>
+        """
+    st.components.v1.html(crash_html, height=280)
+
+  elif gamble_game == "🪙 Coinflip Dual":
+    st.subheader("🪙 Coinflip Dual")
+    col1, col2 = st.columns(2)
+    with col1:
+      choice = st.radio("Choose Side:", ["HEADS 🪙", "TAILS 🪙"])
+    with col2:
+      cf_bet = st.number_input(
+          "Bet:",
+          min_value=10,
+          max_value=st.session_state.arcade_coins,
+          value=50,
+          key="cf_bet",
+      )
+
+    if st.button("🚀 Flip Coin!"):
+      import random
+
+      outcome = random.choice(["HEADS 🪙", "TAILS 🪙"])
+      if choice == outcome:
+        st.session_state.arcade_coins += cf_bet
+        st.balloons()
+        st.success(
+            f"🎉 Result: {outcome}! You WON {cf_bet * 2} Coins! (New Balance:"
+            f" {st.session_state.arcade_coins})"
+        )
+      else:
+        st.session_state.arcade_coins -= cf_bet
+        st.error(
+            f"💥 Result: {outcome}! You LOST {cf_bet} Coins. (New Balance:"
+            f" {st.session_state.arcade_coins})"
+        )
+
+  elif gamble_game == "🎲 Lucky Dice":
+    st.subheader("🎲 Lucky Dice (Roll Over 50)")
+    dice_bet = st.number_input(
+        "Bet Amount:",
+        min_value=10,
+        max_value=st.session_state.arcade_coins,
+        value=50,
+        key="dice_bet",
+    )
+
+    if st.button("🎲 Roll Dice"):
+      import random
+
+      roll = random.randint(1, 100)
+      if roll > 50:
+        st.session_state.arcade_coins += dice_bet
+        st.success(
+            f"🎉 Rolled **{roll}** (> 50)! You won {dice_bet * 2} Coins! (New"
+            f" Balance: {st.session_state.arcade_coins})"
+        )
+      else:
+        st.session_state.arcade_coins -= dice_bet
+        st.error(
+            f"💥 Rolled **{roll}** (<= 50)! You lost {dice_bet} Coins. (New"
+            f" Balance: {st.session_state.arcade_coins})"
+        )
 
 elif app_mode == "✨ AI Game Creator & Vault":
   st.header("✨ AI Game Generator & Private Vault")
   st.markdown(
-      "Describe your dream game! The AI will cook up a fully functional, highly polished HTML5 canvas game "
-      "with robust physics, immediate startup, beautiful custom vector graphics, and smooth controls, saved exclusively "
-      "and **privately in your personal vault**."
+      "Describe your dream game! The AI will cook up a fully functional HTML5 game "
+      "with clean graphics, saved exclusively and **privately in your personal vault**."
   )
 
-  # Input for new game prompt
   game_prompt = st.text_area(
-      "Your Game Idea (e.g., 'A smooth arcade game where a cat catches falling mice'):",
+      "Your Game Idea:",
       value="A smooth arcade game where a cat character catches falling mice.",
   )
   game_title_input = st.text_input("Game Title:", value="My Custom Arcade Game")
 
   if st.button("🚀 Generate Game & Save to Vault") and game_prompt:
-    with st.spinner(
-        "🤖 AI is cooking up your masterpiece (building robust HTML5 canvas"
-        " loops & physics)..."
-    ):
+    with st.spinner("🤖 AI is cooking up your game..."):
       try:
         client = Groq(api_key=api_key)
-        # Master Chef System Prompt enforcing immediate self-starting loops and gorgeous vector graphics
         system_instructions = (
-            "You are an elite, senior HTML5 game developer and master game designer. "
-            "Write a complete, self-contained, fully working HTML5/JavaScript game based on the user's prompt. "
-            "CRITICAL TECHNICAL REQUIREMENTS:\n"
-            "1. The game MUST start immediately upon loading (auto-init or explicit start button inside the canvas UI, NO frozen screens).\n"
-            "2. Implement a robust requestAnimationFrame game loop with clear update() and draw() functions.\n"
-            "3. Use clean vector graphics, custom paths, gradients, and shapes via HTML5 Canvas API (ctx.arc, ctx.fillRect, ctx.beginPath) – DO NOT use emojis.\n"
-            "4. Include interactive controls (keyboard Arrow keys / WASD and responsive on-screen buttons).\n"
-            "5. Include a modern HUD (Score, Lives, Timer) and clean Game Over state with restart logic.\n"
-            "6. CRITICAL: Return ONLY raw HTML code starting with <!DOCTYPE html> or <div> and ending with respective tags. "
-            "Do NOT wrap the output in markdown code blocks like ```html ... ```, just output the exact raw HTML/JS code string."
+            "You are an elite HTML5 game developer. Write a complete, self-contained HTML5/JavaScript game. "
+            "Return ONLY raw HTML code without markdown code blocks."
         )
 
         completion = client.chat.completions.create(
@@ -314,35 +536,24 @@ elif app_mode == "✨ AI Game Creator & Vault":
         )
         generated_html = completion.choices[0].message.content.strip()
 
-        # Clean markdown wrappers if returned accidentally
         if generated_html.startswith("```"):
           generated_html = generated_html.split("```")[1]
           if generated_html.startswith("html"):
             generated_html = generated_html[4:]
 
-        # Save to private session user vault
         st.session_state.user_game_vault.append({
             "title": game_title_input,
             "prompt": game_prompt,
             "code": generated_html,
         })
-        st.success(
-            "🎉 Game successfully created and stored safely in your private"
-            " vault!"
-        )
+        st.success("🎉 Game stored safely in your private vault!")
       except Exception as e:
         st.error(f"⚠️ Generation error: {e}")
 
   st.markdown("---")
-  st.subheader("🔒 Your Private Game Vault (Visible only to you)")
+  st.subheader("🔒 Your Private Game Vault")
 
-  if not st.session_state.user_game_vault:
-    st.info(
-        "Your vault is currently empty. Generate your first custom AI game"
-        " above!"
-    )
-  else:
-    # Select game from private vault
+  if st.session_state.user_game_vault:
     vault_titles = [g["title"] for g in st.session_state.user_game_vault]
     selected_vault_game = st.selectbox(
         "Select a game from your Vault:", vault_titles
@@ -350,8 +561,6 @@ elif app_mode == "✨ AI Game Creator & Vault":
 
     for g in st.session_state.user_game_vault:
       if g["title"] == selected_vault_game:
-        st.markdown(f"**Idea:** _{g['prompt']}_")
-        # Render user's private game safely
         st.components.v1.html(g["code"], height=520, scrolling=True)
 
 elif app_mode == "Chat & AI":
