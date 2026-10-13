@@ -40,25 +40,42 @@ st.title("⚡ Llama AI Hub & Arcade")
 with st.sidebar:
   st.header("🎮 Navigation & Status")
 
-  # Hourly Bonus Logic (Synced with localStorage timer)
-  current_time = time.time()
-  cooldown_period = 3600  # 1 Hour in seconds
-
-  # We inject a small script to read localStorage bonus time if needed,
-  # but here we manage it cleanly via Streamlit session/localStorage bridge.
-  if "bonus_claimed_session" not in st.session_state:
-    st.session_state.bonus_claimed_session = False
-
+  # Visible Live Countdown for Hourly Bonus
   st.markdown("🎁 **Hourly Coin Bonus**")
-  if st.button("Claim +500 Coins"):
-    st.components.v1.html(
-        """
-        <script>
+  bonus_widget_html = """
+    <div style="background:#1e293b; padding:10px; border-radius:8px; text-align:center; border:1px solid #334155; margin-bottom: 10px;">
+        <p style="color:#94a3b8; font-size:12px; margin:0 0 5px 0;">Status / Countdown:</p>
+        <div id="bonusTimer" style="color:#f59e0b; font-weight:bold; font-size:14px;">Loading...</div>
+        <button onclick="claimBonus()" style="background:#10b981; color:white; border:none; padding:8px 14px; font-size:13px; font-weight:bold; border-radius:6px; cursor:pointer; margin-top:8px; width:100%;">Claim +500 Coins</button>
+    </div>
+    <script>
+        function updateTimer() {
             let lastClaim = parseInt(localStorage.getItem('last_bonus_timestamp') || '0');
             let now = Date.now();
             let cooldown = 3600000; // 1 hour in ms
+            let elapsed = now - lastClaim;
+            let timerEl = document.getElementById("bonusTimer");
+            
+            if (elapsed >= cooldown) {
+                timerEl.innerHTML = "✅ Ready to Claim!";
+                timerEl.style.color = "#10b981";
+            } else {
+                let remaining = cooldown - elapsed;
+                let mins = Math.floor(remaining / 60000);
+                let secs = Math.floor((remaining % 60000) / 1000);
+                timerEl.innerHTML = "⏳ " + mins + "m " + secs + "s remaining";
+                timerEl.style.color = "#f59e0b";
+            }
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        function claimBonus() {
+            let lastClaim = parseInt(localStorage.getItem('last_bonus_timestamp') || '0');
+            let now = Date.now();
+            let cooldown = 3600000;
             if (now - lastClaim < cooldown) {
-                alert("⏳ Cooldown active! Please wait until the next hour.");
+                alert("⏳ Cooldown active! Please wait for the timer to finish.");
             } else {
                 localStorage.setItem('last_bonus_timestamp', now);
                 let coins = parseInt(localStorage.getItem('arcade_coins') || '1000');
@@ -66,10 +83,10 @@ with st.sidebar:
                 localStorage.setItem('arcade_coins', coins);
                 window.parent.location.reload();
             }
-        </script>
-        """,
-        height=0,
-    )
+        }
+    </script>
+    """
+  st.components.v1.html(bonus_widget_html, height=130)
 
   st.markdown("---")
 
@@ -306,12 +323,12 @@ if app_mode == "Arcade Games":
           unsafe_allow_html=True,
       )
 
-# GAMBLE STATION CATEGORY (HIGH-END DARK THEME & PERSISTENT LOCALSTORAGE)
+# GAMBLE STATION CATEGORY (HIGH-END DARK THEME + HOUSE EDGE + PLINKO & WHEEL)
 elif app_mode == "🎰 Gamble Station (High-End)":
   st.header("🎰 Gamble Station Originals")
   st.caption(
-      "Play provably fair virtual games. 100% Free coins, persistent in your"
-      " browser."
+      "Play provably fair virtual games with slight house edge. 100% Free"
+      " coins, persistent in your browser."
   )
 
   gamble_game = st.selectbox(
@@ -321,6 +338,8 @@ elif app_mode == "🎰 Gamble Station (High-End)":
           "💥 TNT Crash Multiplier",
           "🪙 Coinflip Dual (Animated)",
           "🎲 Lucky Dice (Animated)",
+          "🔻 Plinko Ball Drop",
+          "🎡 Wheel of Fortune",
       ],
   )
 
@@ -344,7 +363,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         + str(bet_amount)
         + """ | Bombs: """
         + str(num_bombs)
-        + """</p>
+        + """ (House Edge active)</p>
             <div id="grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:340px; margin:20px auto;"></div>
             <div style="margin-top:15px;">
                 <button id="cashoutBtn" onclick="cashout()" style="background:#10b981; color:white; border:none; padding:12px 26px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; display:none; margin-right: 10px; box-shadow: 0 4px 12px rgba(16,185,129,0.4);">Take Winnings</button>
@@ -371,7 +390,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 let coins = getCoins();
                 setCoins(coins);
                 if(coins < bet) {
-                    document.getElementById("statusMsg").innerHTML = "⚠️ Not enough coins! Claim hourly bonus in sidebar.";
+                    document.getElementById("statusMsg").innerHTML = "⚠️ Not enough coins!";
                     document.getElementById("statusMsg").style.color = "#ef4444";
                     return;
                 }
@@ -400,9 +419,6 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                     b.style.fontSize = "22px";
                     b.style.cursor = "pointer";
                     b.style.color = "#fff";
-                    b.style.transition = "all 0.2s ease";
-                    b.onmouseover = () => { if(active && !b.disabled) b.style.borderColor = "#10b981"; };
-                    b.onmouseout = () => { if(active && !b.disabled) b.style.borderColor = "#334155"; };
                     b.onclick = () => reveal(i, b);
                     grid.appendChild(b);
                 }
@@ -425,7 +441,8 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                 } else {
                     btn.style.background = "#059669";
                     btn.innerHTML = "💎";
-                    currentMultiplier = (currentMultiplier * 1.25).toFixed(2);
+                    // House edge applied slightly to multiplier growth
+                    currentMultiplier = (currentMultiplier * 1.22).toFixed(2);
                     let currentWin = Math.floor(bet * currentMultiplier);
                     document.getElementById("cashoutBtn").style.display = "inline-block";
                     document.getElementById("cashoutBtn").innerText = "Cashout (" + currentWin + " Coins)";
@@ -504,7 +521,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         <script>
             let mult = 1.00;
             let timer = null;
-            let crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
+            let crashPoint = (1.0 + Math.random() * 4.2).toFixed(2); // Slight house edge included
             let activeRun = false;
             let bet = """
         + str(bet_crash)
@@ -516,7 +533,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
 
             function resetCrash() {
                 mult = 1.00;
-                crashPoint = (1.1 + Math.random() * 4.5).toFixed(2);
+                crashPoint = (1.0 + Math.random() * 4.2).toFixed(2);
                 activeRun = false;
                 document.getElementById("mult").innerText = "1.00x";
                 document.getElementById("mult").style.color = "#f59e0b";
@@ -581,21 +598,20 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         """
         <div style="text-align:center; background:linear-gradient(135deg, #100f24 0%, #291d4e 100%); padding:30px; border-radius:16px; border:2px solid #8b5cf6; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
-                <h3 style="color:#c084fc; margin:0; font-size: 18px;">🪙 COINFLIP ARENA</h3>
+                <h3 style="color:#c084fc; margin:0; font-size: 18px;">🪙 COINFLIP (1.95x Payout)</h3>
                 <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
             
-            <!-- 3D Distinct Coinflip Element with Heads (H) and Tails (T) -->
             <div style="margin:25px auto; perspective: 1000px; width: 100px; height: 100px;">
                 <div id="coin" style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.15, 0.85, 0.35, 1.2); border-radius: 50%;">
-                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #b45309); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #fde68a; box-shadow: 0 4px 15px rgba(245,158,11,0.5);">H</div>
-                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #475569); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #cbd5e1; transform: rotateY(180deg); box-shadow: 0 4px 15px rgba(148,163,184,0.5);">T</div>
+                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #b45309); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #fde68a;">H</div>
+                    <div style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #475569); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; border: 4px solid #cbd5e1; transform: rotateY(180deg);">T</div>
                 </div>
             </div>
 
             <div style="margin-bottom: 20px;">
-                <button onclick="flip('HEADS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer; margin-right:12px; font-size: 15px;">👑 PICK HEADS (H)</button>
-                <button onclick="flip('TAILS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer; font-size: 15px;">🛡️ PICK TAILS (T)</button>
+                <button onclick="flip('HEADS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer; margin-right:12px;">👑 HEADS (H)</button>
+                <button onclick="flip('TAILS')" style="background:#334155; color:white; border:2px solid #a855f7; padding:12px 26px; font-weight:bold; border-radius:10px; cursor:pointer;">🛡️ TAILS (T)</button>
             </div>
             <p id="cfMsg" style="color:#fff; font-weight:bold; margin:0; font-size: 15px;"></p>
         </div>
@@ -627,9 +643,9 @@ elif app_mode == "🎰 Gamble Station (High-End)":
 
                 setTimeout(() => {
                     if(choice === outcome) {
-                        let win = bet * 2;
+                        let win = Math.floor(bet * 1.95); // House edge applied
                         setCoins(getCoins() + win);
-                        document.getElementById("cfMsg").innerText = "🎉 Result: " + outcome + "! You WON " + win + " coins!";
+                        document.getElementById("cfMsg").innerText = "🎉 Result: " + outcome + "! You WON " + win + " coins (1.95x)!";
                         document.getElementById("cfMsg").style.color = "#10b981";
                     } else {
                         document.getElementById("cfMsg").innerText = "💥 Result: " + outcome + "! You LOST " + bet + " coins.";
@@ -652,13 +668,13 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         """
         <div style="text-align:center; background:linear-gradient(135deg, #1b0f1e 0%, #4a1c38 100%); padding:30px; border-radius:16px; border:2px solid #ec4899; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
-                <h3 style="color:#f472b6; margin:0; font-size: 18px;">🎲 LUCKY DICE ARENA</h3>
+                <h3 style="color:#f472b6; margin:0; font-size: 18px;">🎲 LUCKY DICE (1.95x Payout)</h3>
                 <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
             </div>
             
-            <div id="diceBox" style="width:90px; height:90px; background:#1e293b; border:3px solid #ec4899; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:36px; color:#fff; margin:20px auto; box-shadow:0 6px 20px rgba(236,72,153,0.4);">🎲</div>
+            <div id="diceBox" style="width:90px; height:90px; background:#1e293b; border:3px solid #ec4899; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:36px; color:#fff; margin:20px auto;">🎲</div>
 
-            <button onclick="rollDice()" style="background:#ec4899; color:white; border:none; padding:14px 32px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; box-shadow: 0 4px 15px rgba(236,72,153,0.4);">🎲 ROLL DICE (> 50)</button>
+            <button onclick="rollDice()" style="background:#ec4899; color:white; border:none; padding:14px 32px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer;">🎲 ROLL DICE (> 50)</button>
             <p id="dMsg" style="color:#fff; font-weight:bold; margin-top:18px; font-size: 15px;"></p>
         </div>
         <script>
@@ -691,7 +707,7 @@ elif app_mode == "🎰 Gamble Station (High-End)":
                     diceBox.innerText = finalRoll;
 
                     if(finalRoll > 50) {
-                        let win = bet * 2;
+                        let win = Math.floor(bet * 1.95); // House edge
                         setCoins(getCoins() + win);
                         document.getElementById("dMsg").innerText = "🎉 Rolled " + finalRoll + " (>50)! You won " + win + " coins!";
                         document.getElementById("dMsg").style.color = "#10b981";
@@ -705,6 +721,162 @@ elif app_mode == "🎰 Gamble Station (High-End)":
         """
     )
     st.components.v1.html(dice_html, height=350)
+
+  elif gamble_game == "🔻 Plinko Ball Drop":
+    st.subheader("🔻 Plinko Ball Drop")
+    plinko_bet = st.number_input(
+        "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="pb"
+    )
+
+    plinko_html = (
+        """
+        <div style="text-align:center; background:linear-gradient(135deg, #022330 0%, #083344 100%); padding:30px; border-radius:16px; border:2px solid #06b6d4; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#22d3ee; margin:0; font-size: 18px;">🔻 PLINKO DROP</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
+            </div>
+            
+            <div id="plinkoResult" style="font-size:28px; font-weight:bold; color:#22d3ee; margin:25px 0; min-height:40px;">⚪ Ready to Drop</div>
+
+            <button onclick="dropBall()" style="background:#06b6d4; color:#000; border:none; padding:14px 32px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; box-shadow: 0 4px 15px rgba(6,182,212,0.4);">🔻 DROP BALL</button>
+            <p id="pMsg" style="color:#fff; font-weight:bold; margin-top:18px; font-size: 15px;"></p>
+        </div>
+        <script>
+            let bet = """
+        + str(plinko_bet)
+        + """;
+            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
+            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            setCoins(getCoins());
+
+            function dropBall() {
+                let coins = getCoins();
+                if(coins < bet) {
+                    document.getElementById("pMsg").innerText = "⚠️ Not enough coins!";
+                    document.getElementById("pMsg").style.color = "#ef4444";
+                    return;
+                }
+                setCoins(coins - bet);
+                document.getElementById("pMsg").innerText = "Ball dropping through pins...";
+                document.getElementById("pMsg").style.color = "#22d3ee";
+
+                let resBox = document.getElementById("plinkoResult");
+                let steps = 0;
+                let dropInterval = setInterval(() => {
+                    resBox.innerText = steps % 2 === 0 ? "🔵 Falling..." : "🟢 Bounce...";
+                    steps++;
+                }, 150);
+
+                setTimeout(() => {
+                    clearInterval(dropInterval);
+                    // Plinko multipliers with house edge (weighted towards lower payouts)
+                    let multipliers = [0.2, 0.5, 1.0, 1.2, 2.0, 5.0];
+                    let weights = [0.35, 0.30, 0.20, 0.10, 0.04, 0.01]; // House edge weighting
+                    let rand = Math.random();
+                    let cumulative = 0;
+                    let mult = 0.2;
+                    for(let i=0; i<weights.length; i++) {
+                        cumulative += weights[i];
+                        if(rand <= cumulative) {
+                            mult = multipliers[i];
+                            break;
+                        }
+                    }
+
+                    let win = Math.floor(bet * mult);
+                    setCoins(getCoins() + win);
+                    resBox.innerText = "🎯 Hit Multiplier: " + mult + "x";
+                    if(mult >= 1.0) {
+                        document.getElementById("pMsg").innerText = "🎉 Won " + win + " coins!";
+                        document.getElementById("pMsg").style.color = "#10b981";
+                    } else {
+                        document.getElementById("pMsg").innerText = "💥 Returned " + win + " coins.";
+                        document.getElementById("pMsg").style.color = "#ef4444";
+                    }
+                }, 1200);
+            }
+        </script>
+        """
+    )
+    st.components.v1.html(plinko_html, height=350)
+
+  elif gamble_game == "🎡 Wheel of Fortune":
+    st.subheader("🎡 Wheel of Fortune")
+    wheel_bet = st.number_input(
+        "Bet Amount:", min_value=10, max_value=100000, value=50, step=10, key="wb"
+    )
+
+    wheel_html = (
+        """
+        <div style="text-align:center; background:linear-gradient(135deg, #3b0764 0%, #581c87 100%); padding:30px; border-radius:16px; border:2px solid #d946ef; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 10px;">
+                <h3 style="color:#e879f9; margin:0; font-size: 18px;">🎡 WHEEL OF FORTUNE</h3>
+                <span style="background:#111827; color:#f59e0b; padding:6px 14px; border-radius:8px; font-weight:bold; border:1px solid #374151;">🪙 <span id="coinDisplay">1,000</span> Coins</span>
+            </div>
+            
+            <div id="wheelBox" style="font-size:32px; font-weight:bold; color:#e879f9; margin:25px 0; min-height:40px;">🎯 🎡 SPIN ME</div>
+
+            <button onclick="spinWheel()" style="background:#d946ef; color:white; border:none; padding:14px 32px; font-size:16px; font-weight:bold; border-radius:10px; cursor:pointer; box-shadow: 0 4px 15px rgba(217,70,239,0.4);">🎡 SPIN WHEEL</button>
+            <p id="wMsg" style="color:#fff; font-weight:bold; margin-top:18px; font-size: 15px;"></p>
+        </div>
+        <script>
+            let bet = """
+        + str(wheel_bet)
+        + """;
+            function getCoins() { return parseInt(localStorage.getItem('arcade_coins') || '1000'); }
+            function setCoins(val) { localStorage.setItem('arcade_coins', val); document.getElementById("coinDisplay").innerText = val.toLocaleString(); }
+            setCoins(getCoins());
+
+            function spinWheel() {
+                let coins = getCoins();
+                if(coins < bet) {
+                    document.getElementById("wMsg").innerText = "⚠️ Not enough coins!";
+                    document.getElementById("wMsg").style.color = "#ef4444";
+                    return;
+                }
+                setCoins(coins - bet);
+                document.getElementById("wMsg").innerText = "Wheel is spinning...";
+                document.getElementById("wMsg").style.color = "#e879f9";
+
+                let wheelBox = document.getElementById("wheelBox");
+                let options = ["0x", "0.5x", "1.0x", "1.5x", "3.0x", "10x"];
+                let spinInterval = setInterval(() => {
+                    let randOpt = options[Math.floor(Math.random() * options.length)];
+                    wheelBox.innerText = "🎡 " + randOpt;
+                }, 90);
+
+                setTimeout(() => {
+                    clearInterval(spinInterval);
+                    // House edge weights
+                    let mults = [0, 0.5, 1.0, 1.5, 3.0, 10.0];
+                    let weights = [0.40, 0.30, 0.18, 0.08, 0.03, 0.01];
+                    let rand = Math.random();
+                    let cumulative = 0;
+                    let selectedMult = 0;
+                    for(let i=0; i<weights.length; i++) {
+                        cumulative += weights[i];
+                        if(rand <= cumulative) {
+                            selectedMult = mults[i];
+                            break;
+                        }
+                    }
+
+                    let win = Math.floor(bet * selectedMult);
+                    setCoins(getCoins() + win);
+                    wheelBox.innerText = "🎉 Result: " + selectedMult + "x";
+                    if(selectedMult >= 1.0) {
+                        document.getElementById("wMsg").innerText = "🎉 Won " + win + " coins!";
+                        document.getElementById("wMsg").style.color = "#10b981";
+                    } else {
+                        document.getElementById("wMsg").innerText = "💥 Won " + win + " coins.";
+                        document.getElementById("wMsg").style.color = "#ef4444";
+                    }
+                }, 1500);
+            }
+        </script>
+        """
+    )
+    st.components.v1.html(wheel_html, height=350)
 
 elif app_mode == "✨ AI Game Creator & Vault":
   st.header("✨ AI Game Generator & Private Vault")
